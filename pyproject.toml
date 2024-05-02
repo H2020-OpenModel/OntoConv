@@ -1,5 +1,5 @@
 [project]
-name = "OntoConv"
+name = "ontoconv"
 description = "Tool connecting OntoFlow to ExecFlow."
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -19,15 +19,18 @@ classifiers = [
 keywords = ["OpenModel", "OntoFlow", "ExecFlow", "workflow"]
 requires-python = "~=3.7"
 dynamic = ["version"]
-
 dependencies = [
-    "git+https://github.com/H2020-OpenModel/OntoFlow",
-    "git+https://github.com/H2020-OpenModel/ExecFlow",
-    "rdflib",
+    #"OntoFlow @ git+https://github.com/H2020-OpenModel/OntoFlow",
+    #"ExecFlow @ git+https://github.com/H2020-OpenModel/ExecFlow",
+    "tripper >=0.2.15,<1",
+    "rdflib ~=7.0",
+    "pyyaml ~=6.0",
+    "oteapi-core >=0.6.1,<0.7",
+    "otelib >=0.4.1,<0.5",
 ]
 
 [project.optional-dependencies]
-docs = [],
+docs = []
 pre-commit = [
     "pre-commit ~=2.21",
     "pylint ~=2.13",
@@ -44,12 +47,12 @@ dev = [
 ]
 
 [project.urls]
-Home = "https://github.com/EMMC-ASBL/tripper"
-Documentation = "https://EMMC-ASBL.github.io/tripper"
-Source = "https://github.com/EMMC-ASBL/tripper"
-"Issue Tracker" = "https://github.com/EMMC-ASBL/tripper/issues"
-Changelog = "https://github.com/EMMC-ASBL/tripper/blob/master/CHANGELOG.md"
-Package = "https://pypi.org/project/tripper"
+Home = "https://github.com/H2020-OpenModel/OntoConv"
+Source = "https://github.com/H2020-OpenModel/OntoConv"
+"Issue Tracker" = "https://github.com/H2020-OpenModel/issues"
+#Documentation = "https://H2020-OpenModel.github.io/OntoConv"
+#Changelog = "https://github.com/H2020-OpenModel/OntoConv/blob/master/CHANGELOG.md"
+#Package = "https://pypi.org/project/ontoconv"
 
 [build-system]
 requires = ["flit_core >=3.4,<4"]

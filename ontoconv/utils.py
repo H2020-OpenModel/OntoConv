@@ -44,6 +44,40 @@ def populate_triplestore(
             ts.add((iri, RDF.type, OTEIO.DataSink))
 
 
+def generate_pipeline(
+    ts: Triplestore,
+    steps: Sequence[str],
+) -> dict:
+    """Return a declarative ExecFlow pipeline as a string.
+
+    Arguments:
+        ts: Tripper triplestore documenting data sources and sinks.
+        steps: Sequence of names of data sources and sinks to combine.
+            The order is important and should go from source to sink.
+        client_iri: IRI of OTELib client to use.
+
+    Returns:
+        Dict-representation of a declarative ExecFlow pipeline.
+    """
+    names = []
+    strategies = []
+    for step in steps:
+        name_suffix = step.rsplit("/", 1)[-1]
+        resource = load_container(ts, step, recognised_keys="basic")
+        for strategy in resource:
+            for stype, conf in strategy.items():
+                name = f"{name_suffix}_{stype}"
+                d = {stype: name}
+                d.update(conf)
+            names.append(name)
+            strategies.append(d)
+    return {
+        "version": 1,
+        "strategies": strategies,
+        "pipelines": {"pipe": " | ".join(names)},
+    }
+
+
 def get_data(
     ts: Triplestore,
     steps: Sequence[str],
