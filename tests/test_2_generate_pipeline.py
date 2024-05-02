@@ -23,6 +23,3 @@ if True:
 
     with open(outdir / "pipeline.yml", "w") as f:
         yaml.safe_dump(pipeline, f)
-
-    with open(outdir / "pipeline.yml", "r") as f:
-        print(f.read())
