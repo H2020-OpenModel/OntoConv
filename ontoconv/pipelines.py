@@ -1,14 +1,12 @@
-"""
-"""
+"""Module for storing/loading OTEAPI pipelines to/from a knowledge base."""
+
 import warnings
-from typing import Mapping, Sequence
+from typing import Sequence
 
 import yaml
-
-from tripper import RDF, Namespace, Triplestore
-from tripper.convert import save_container, load_container
 from otelib import OTEClient
-
+from tripper import RDF, Namespace, Triplestore
+from tripper.convert import load_container, save_container
 
 # Namespaces
 OTEIO = Namespace("http://emmo.info/oteio#")
@@ -29,7 +27,7 @@ def populate_triplestore(
         yamlfile: Standardised YAML file to load the data documentation
             from.
     """
-    with open(yamlfile) as f:
+    with open(yamlfile, encoding="utf8") as f:
         document = yaml.safe_load(f)
 
     datadoc = document["data_resources"]
@@ -104,4 +102,4 @@ def get_data(
             pipe = creator(**config)
             pipeline = pipeline >> pipe if pipeline else pipe
 
-    pipeline.get()
+    pipeline.get()  # type: ignore

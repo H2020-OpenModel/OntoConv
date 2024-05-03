@@ -1,8 +1,10 @@
-"""Test populating a knowledge base from yaml file documenting data resources."""
+"""Test populating a knowledge base from yaml file documenting data resources.
+"""
 
 
-if True:
-#def test_populate_kb():
+# if True:
+def test_populate_kb():
+    """Test populating the KB."""
     from tripper import Triplestore
 
     from ontoconv.pipelines import populate_triplestore
