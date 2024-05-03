@@ -13,7 +13,7 @@ data_resources:
         mediaType: application/vnd.dlite-parse
         configuration:
           label: materialcard_al
-          metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard"
+          metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard
           driver: "json"
 
 
@@ -35,7 +35,7 @@ data_resources:
     - dataresource:
        configuration:
          label: materialcard_concrete
-         metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard"
+         metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard
          driver: "json"
        downloadUrl: file://tests/tests_dlite_plugins/testfiles/input/material_card_concrete.json
        mediaType: application/vnd.dlite-parse

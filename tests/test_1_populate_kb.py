@@ -2,7 +2,12 @@
 
 
 if True:
+<<<<<<< Updated upstream
 #def test_populate_kb():
+=======
+# def test_populate_kb():
+    """Test populating the KB."""
+>>>>>>> Stashed changes
     from tripper import Triplestore
 
     from ontoconv.utils import populate_triplestore

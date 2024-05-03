@@ -6,7 +6,7 @@ strategies:
   mediaType: application/vnd.dlite-parse
   configuration:
     label: materialcard_al
-    metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard"
+    metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard
     driver: "json"
 
 
@@ -24,7 +24,7 @@ strategies:
 # second material is Concrete
 - configuration:
     label: materialcard_concrete
-    metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard"
+    metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard
     driver: "json"
   dataresource: load_data_concrete
   downloadUrl: file://tests/tests_dlite_plugins/testfiles/input/material_card_concrete.json
