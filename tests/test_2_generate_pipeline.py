@@ -1,13 +1,9 @@
 """Test generating a declarative pipeline file for ExecFlow."""
 
 
-if True:
-<<<<<<< Updated upstream
-#def test_generate_pipeline():
-=======
-# def test_generate_pipeline():
+# if True:
+def test_generate_pipeline():
     """Test generating declarative pipeline."""
->>>>>>> Stashed changes
     import yaml
 
     from tripper import Triplestore
@@ -19,16 +15,6 @@ if True:
     ts.parse(outdir / "kb.ttl")
     SS3 = ts.bind("ss3", "http://openmodel.eu/ss3/")
 
-<<<<<<< Updated upstream
-    pipeline = generate_pipeline(ts, steps=[
-        SS3.aluminium_material_card,
-        SS3.create_abaqus_input_material_card,
-        SS3.concrete_material_card,
-        SS3.append_abaqus_input_material_card,
-    ])
-
-    with open(outdir / "pipeline.yml", "w") as f:
-=======
     pipeline = generate_pipeline(
         ts,
         steps=[
@@ -39,8 +25,7 @@ if True:
         ],
     )
     with open(outdir / "pipeline.yml", "w", encoding="utf8") as f:
->>>>>>> Stashed changes
-        yaml.safe_dump(pipeline, f)
+        yaml.safe_dump(pipeline, f, sort_keys=False)
 
 
     pipeline2 = generate_pipeline(
@@ -55,4 +40,4 @@ if True:
         ],
     )
     with open(outdir / "pipeline2.yml", "w", encoding="utf8") as f:
-        yaml.safe_dump(pipeline2, f)
+        yaml.safe_dump(pipeline2, f, sort_keys=False)
