@@ -7,8 +7,8 @@ def test_populate_kb():
     """Test populating the KB."""
     from tripper import Triplestore
 
+    from ontoconv.pipelines import populate_triplestore
     from ontoconv.testutils import indir, outdir
-    from ontoconv.utils import populate_triplestore
 
     ts = Triplestore(backend="rdflib")
     populate_triplestore(ts, indir / "resources.yaml")

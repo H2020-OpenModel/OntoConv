@@ -7,8 +7,8 @@ def test_generate_pipeline():
     import yaml
     from tripper import Triplestore
 
+    from ontoconv.pipelines import generate_pipeline
     from ontoconv.testutils import outdir
-    from ontoconv.utils import generate_pipeline
 
     ts = Triplestore(backend="rdflib")
     ts.parse(outdir / "kb.ttl")
