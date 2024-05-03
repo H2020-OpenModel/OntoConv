@@ -12,7 +12,7 @@ if True:
 
     from tripper import Triplestore
 
-    from ontoconv.utils import generate_pipeline
+    from ontoconv.pipelines import generate_pipeline
     from ontoconv.testutils import outdir
 
     ts = Triplestore(backend="rdflib")
