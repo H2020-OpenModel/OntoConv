@@ -5,7 +5,7 @@ if True:
 #def test_populate_kb():
     from tripper import Triplestore
 
-    from ontoconv.utils import populate_triplestore
+    from ontoconv.pipelines import populate_triplestore
     from ontoconv.testutils import indir, outdir
 
     ts = Triplestore(backend="rdflib")
