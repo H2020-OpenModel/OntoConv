@@ -1,3 +1,20 @@
+# Backup
 *~
+
+# Python
+*.egg-info
 __pycache__
-OntoConv.egg-info
+*.pyc
+
+# Testing and tools
+.*_cache/
+
+# Coverage
+.coverage
+htmlcov
+
+# Documentation
+site/
+
+# Build
+dist/

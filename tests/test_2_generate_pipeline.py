@@ -5,7 +5,6 @@
 def test_generate_pipeline():
     """Test generating declarative pipeline."""
     import yaml
-
     from tripper import Triplestore
 
     from ontoconv.pipelines import generate_pipeline
@@ -24,6 +23,7 @@ def test_generate_pipeline():
             SS3.append_abaqus_input_material_card,
         ],
     )
+
     with open(outdir / "pipeline.yml", "w", encoding="utf8") as f:
         yaml.safe_dump(pipeline, f, sort_keys=False)
 
@@ -41,3 +41,4 @@ def test_generate_pipeline():
     )
     with open(outdir / "pipeline2.yml", "w", encoding="utf8") as f:
         yaml.safe_dump(pipeline2, f, sort_keys=False)
+

@@ -1,4 +1,5 @@
-"""Test populating a knowledge base from yaml file documenting data resources."""
+"""Test populating a knowledge base from yaml file documenting data resources.
+"""
 
 
 # if True:
