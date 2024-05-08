@@ -13,13 +13,13 @@ strategies:
     location: collection.json
     options: "mode=w"
     store_collection: True
-  
+
 - function: convert_instance
   functionType: application/vnd.dlite-convert
   configuration:
     module_name: ss3_wrappers.abaqus_convert
     function_name: abaqus_converter
-    inputs: 
+    inputs:
       - label: cement_output
     outputs:
       - label: cement_output_instance
@@ -32,4 +32,4 @@ strategies:
     names: from_cuds
 
 pipelines:
-  pipe_abaqus_output_aiida: 'datanode2cuds | convert_instance | cuds2datanode' 
+  pipe_abaqus_output_aiida: 'datanode2cuds | convert_instance | cuds2datanode'

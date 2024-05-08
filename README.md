@@ -24,3 +24,11 @@ pip install git+https://github.com/H2020-OpenModel/OntoConv
 ```
 
 To install a given release, commit or branch, you can addit to the end of the URL preceeded by an "@"-sign. For example: `pip install git+https://github.com/H2020-OpenModel/OntoConv@<commit code>`.
+
+
+As a developer, you might want to install OntoConv with
+
+```
+pip install -U -e .[dev]
+pre-commit install
+```
