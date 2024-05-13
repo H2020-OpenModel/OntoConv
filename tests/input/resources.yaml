@@ -41,17 +41,18 @@ data_resources:
        mediaType: application/vnd.dlite-parse
 
 
-  # Append to material card input file for Abaqus
-  http://openmodel.eu/ss3/append_abaqus_input_material_card:
-    - function:
-       functionType: application/vnd.dlite-generate
-       configuration:
-         driver: plugin_abaqus_material
-         # the name of the file is as expected by the Abaqus input template
-         location: Section_materials.inp
-         # the option indicates that we do not write the header
-         options: "mode=a"
-         label: materialcard_concrete
+  ## FIXME - update MaterialCardGenerator instead of appending to existing file
+  ## Append to material card input file for Abaqus
+  #http://openmodel.eu/ss3/append_abaqus_input_material_card:
+  #  - function:
+  #     functionType: application/vnd.dlite-generate
+  #     configuration:
+  #       driver: plugin_abaqus_material
+  #       # the name of the file is as expected by the Abaqus input template
+  #       location: Section_materials.inp
+  #       # the option indicates that we do not write the header
+  #       options: "mode=a"
+  #       label: materialcard_concrete
 
 
   # Create the AiiDA SingleFile nodes in two steps through a Dlite collection
