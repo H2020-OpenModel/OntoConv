@@ -88,6 +88,7 @@ data_resources:
          driver: "json"
 
 
+  # FIXME - update MaterialCardGenerator instead of appending to existing file
   # Append to material card input file for Abaqus
   http://open-model.eu/ontologies/ss3#append_abaqus_input_material_card:
     - function:
