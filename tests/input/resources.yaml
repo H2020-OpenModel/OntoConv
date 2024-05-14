@@ -2,13 +2,44 @@
 
 version: 1
 
+prefixes:
+  ss3: "http://open-model.eu/ontologies/ss3#"
+  oteio: "https://w3id.org/emmo/domain/oteio#"
+
+
 # Documentation of existing data sources and sinks that will be placed in the
 # knowledge base.
 data_resources:
 
-  # Load aluminium material card
-  http://openmodel.eu/ss3/aluminium_material_card:
+  # ------- Just stubs sufficiently for OntoFlow -------
+  ss3:fenics_finite_element_mesh:
     - dataresource:
+        type: ["oteio:DataSink", "ss3:FenicsFiniteElementMesh"]
+
+  ss3:fenics_materials:
+    - dataresource:
+        type: ["oteio:DataSink", "ss3:FenicsMaterials"]
+
+  ss3:fenics_simulation_config:
+    - dataresource:
+        type: ["oteio:DataSink", "ss3:FenicsSimulationConfig"]
+
+  ss3:abaqus_finite_element_mesh:
+    - dataresource:
+        type: ["oteio:DataSink", "ss3:AbaqusFiniteElementMesh"]
+
+  ss3:abaqus_simple_material_card_template:
+    - dataresource:
+        type: ["oteio:DataSink", "ss3:AbaqusSimpleMaterialCardTemplate"]
+
+
+
+  # ------- More complete data resources -------
+
+  # Load aluminium material card
+  http://open-model.eu/ontologies/ss3#aluminium_material_card:
+    - dataresource:
+        type: ss3:AbaqusSimpleMaterialCardTemplate
         downloadUrl: file://tests/tests_dlite_plugins/testfiles/input/material_card_al.json
         mediaType: application/vnd.dlite-parse
         configuration:
@@ -16,9 +47,24 @@ data_resources:
           metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard
           driver: "json"
 
+    - mapping:
+        prefixes:
+          amc: "http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard#"
+          map: "https://w3id.org/emmo/domain/mappings#"
+          micro: "https://w3id.org/emmo/domain/microstructure#"
+          ss3: "http://open-model.eu/ontologies/ss3#"
+        triples:
+          - ["amc:materialName",   "map:mapsTo", "micro:MaterialName"]
+          - ["amc:density",        "map:mapsTo", "emmo:Density"]
+          - ["amc:E_elastic",      "map:mapsTo", "emmo:ModulusOfElasticity"]
+          - ["amc:Nu_elastic",     "map:mapsTo", "emmo:PoissonNumber"]
+          - ["amc:Strain_plastic", "map:mapsTo", "micro:PlasticStrain"]
+          - ["amc:Stress_plastic", "map:mapsTo", "micro:PlasticStress"]
+          - ["amc:Yield_stress",   "map:mapsTo", "micro:YieldStress"]
+
 
   # Create the material card input file for Abaqus
-  http://openmodel.eu/ss3/create_abaqus_input_material_card:
+  http://open-model.eu/ontologies/ss3#create_abaqus_input_material_card:
     - function:
         functionType: application/vnd.dlite-generate
         configuration:
@@ -31,18 +77,19 @@ data_resources:
 
 
   # Load material for concrete
-  http://openmodel.eu/ss3/concrete_material_card:
+  http://open-model.eu/ontologies/ss3#concrete_material_card:
     - dataresource:
+       type: ss3:ConcreteMaterialCard
+       downloadUrl: file://tests/tests_dlite_plugins/testfiles/input/material_card_concrete.json
+       mediaType: application/vnd.dlite-parse
        configuration:
          label: materialcard_concrete
          metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard
          driver: "json"
-       downloadUrl: file://tests/tests_dlite_plugins/testfiles/input/material_card_concrete.json
-       mediaType: application/vnd.dlite-parse
 
 
   # Append to material card input file for Abaqus
-  http://openmodel.eu/ss3/append_abaqus_input_material_card:
+  http://open-model.eu/ontologies/ss3#append_abaqus_input_material_card:
     - function:
        functionType: application/vnd.dlite-generate
        configuration:
@@ -56,7 +103,7 @@ data_resources:
 
   # Create the AiiDA SingleFile nodes in two steps through a Dlite collection
   # Step1 file stored in a dlite collection
-  http://openmodel.eu/ss3/file2collection_mat:
+  http://open-model.eu/ontologies/ss3#file2collection_mat:
     - function:
        functionType: aiidacuds/file2collection
        configuration:
@@ -68,7 +115,7 @@ data_resources:
   # specific to execution with execflow
   # the variable names defined in the declarative workflow should correspond to the label "material_file"
   # from_cuds is not really a label you can't change it is a hard-coded thing
-  http://openmodel.eu/ss3/cuds2datanode:
+  http://open-model.eu/ontologies/ss3#cuds2datanode:
     - function:
        functionType: aiidacuds/cuds2datanode
        configuration:
