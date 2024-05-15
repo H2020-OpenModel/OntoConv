@@ -5,14 +5,14 @@
 def test_generate_pipeline():
     """Test generating declarative pipeline."""
     import yaml
+    from paths import outdir
     from tripper import Triplestore
 
     from ontoconv.pipelines import generate_pipeline
-    from ontoconv.testutils import outdir
 
     ts = Triplestore(backend="rdflib")
     ts.parse(outdir / "kb.ttl")
-    SS3 = ts.bind("ss3", "http://openmodel.eu/ss3/")
+    SS3 = ts.bind("ss3", "http://open-model.eu/ontologies/ss3#")
 
     pipeline = generate_pipeline(
         ts,
@@ -27,7 +27,6 @@ def test_generate_pipeline():
     with open(outdir / "pipeline.yml", "w", encoding="utf8") as f:
         yaml.safe_dump(pipeline, f, sort_keys=False)
 
-
     pipeline2 = generate_pipeline(
         ts,
         steps=[
@@ -41,4 +40,3 @@ def test_generate_pipeline():
     )
     with open(outdir / "pipeline2.yml", "w", encoding="utf8") as f:
         yaml.safe_dump(pipeline2, f, sort_keys=False)
-
