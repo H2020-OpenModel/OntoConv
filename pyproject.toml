@@ -20,7 +20,8 @@ dynamic = ["version"]
 dependencies = [
     #"OntoFlow @ git+https://github.com/H2020-OpenModel/OntoFlow",
     #"ExecFlow @ git+https://github.com/H2020-OpenModel/ExecFlow",
-    "tripper >=0.2.15,<1",
+    #"tripper >=0.2.15,<1",
+    "tripper @ git+https://github.com/EMMC-ASBL/tripper",
     "rdflib ~=7.0",
     "pyyaml ~=6.0",
     "oteapi-core >=0.6.1,<0.7",
