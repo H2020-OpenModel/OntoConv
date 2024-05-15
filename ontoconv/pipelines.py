@@ -32,6 +32,8 @@ def get_resource_types(resource: list) -> list:
     for item in resource:
         if isinstance(item, dict):
             dataresource = item.get("dataresource", {})
+        else:
+            dataresource = {}
 
     if dataresource:
         types = dataresource.get("type", [])
