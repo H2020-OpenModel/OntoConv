@@ -5,14 +5,55 @@ from typing import Sequence
 
 import yaml
 from otelib import OTEClient
-from tripper import RDF, Namespace, Triplestore
+from tripper import OTEIO, RDF, Triplestore
 from tripper.convert import load_container, save_container
-
-# Namespaces
-OTEIO = Namespace("http://emmo.info/oteio#")
 
 # Get rid of FutureWarning from csv.py
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+
+def get_resource_types(resource: list) -> list:
+    """Returns the type(s) of a given resource.
+
+    Heuristics is applied to determine if a resource is a source or
+    sink if it is not explicitly defined in a `resource` strategy.
+
+    Arguments:
+        resource: List with OTEAPI configurations for a data resource.
+
+    Returns:
+        List with all ontological classes that the resource individual
+        is an instance of.
+    """
+    if isinstance(resource, str) or not isinstance(resource, Sequence):
+        raise TypeError(
+            f"Expected data resource configuration to be a list: {resource!r}"
+        )
+    for item in resource:
+        if isinstance(item, dict):
+            dataresource = item.get("dataresource", {})
+        else:
+            dataresource = {}
+
+    if dataresource:
+        types = dataresource.get("type", [])
+        if isinstance(types, str):
+            types = [types]
+        # Assume data source if partial pipeline has a dataresource
+        # strategy with no explicitly type.
+        resource_type_iris = (
+            OTEIO.DataSource,
+            OTEIO.DataSink,
+            "oteio:DataSource",
+            "oteio:DataSink",
+        )
+        if not any(iri in types for iri in resource_type_iris):
+            types.append(OTEIO.DataSource)
+    else:
+        # Assume data sink if partial pipeline has no dataresource strategy.
+        types = [OTEIO.DataSink]
+
+    return types
 
 
 def populate_triplestore(
@@ -30,16 +71,18 @@ def populate_triplestore(
     with open(yamlfile, encoding="utf8") as f:
         document = yaml.safe_load(f)
 
+    prefixes = document.get("prefixes", {})
+    for prefix, namespace in prefixes.items():
+        ts.bind(prefix, namespace)
+
     datadoc = document["data_resources"]
     for iri, resource in datadoc.items():
+        iri = ts.expand_iri(iri)
         save_container(ts, resource, iri, recognised_keys="basic")
 
-        # Some heuristics to categorise partial pipelines as either
-        # data sources or data sinks
-        if "dataresource" in resource:
-            ts.add((iri, RDF.type, OTEIO.DataSource))
-        else:
-            ts.add((iri, RDF.type, OTEIO.DataSink))
+        # Add rdf:type relations
+        for rtype in get_resource_types(resource):
+            ts.add((iri, RDF.type, ts.expand_iri(rtype)))
 
 
 def generate_pipeline(
@@ -60,8 +103,12 @@ def generate_pipeline(
     names = []
     strategies = []
     for step in steps:
-        name_suffix = step.rsplit("/", 1)[-1]
+        if "#" in step:
+            name_suffix = step.split("#", 1)[-1]
+        else:
+            name_suffix = step.rsplit("/", 1)[-1]
         resource = load_container(ts, step, recognised_keys="basic")
+
         for strategy in resource:
             for stype, conf in strategy.items():
                 name = f"{name_suffix}_{stype}"

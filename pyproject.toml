@@ -20,7 +20,8 @@ dynamic = ["version"]
 dependencies = [
     #"OntoFlow @ git+https://github.com/H2020-OpenModel/OntoFlow",
     #"ExecFlow @ git+https://github.com/H2020-OpenModel/ExecFlow",
-    "tripper >=0.2.15,<1",
+    #"tripper >=0.2.15,<1",
+    "tripper @ git+https://github.com/EMMC-ASBL/tripper@revert-recognised-keys-for-strategies",
     "rdflib ~=7.0",
     "pyyaml ~=6.0",
     "oteapi-core >=0.6.1,<0.7",
@@ -31,7 +32,7 @@ dependencies = [
 docs = []
 pre-commit = [
     "pre-commit ~=2.21",
-    "pylint ~=2.13",
+    "pylint ~=3.2",
 ]
 testing = [
     "pytest ~=7.4",
@@ -39,7 +40,7 @@ testing = [
 ]
 dev = [
     "pre-commit ~=2.21",
-    "pylint ~=2.13",
+    "pylint ~=3.2",
     "pytest ~=7.4",
     "pytest-cov ~=4.1",
 ]
