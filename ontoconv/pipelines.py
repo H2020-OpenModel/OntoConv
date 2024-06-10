@@ -110,11 +110,27 @@ def populate_triplestore(
     simdoc = document.get("simulation_resources", {})
     for iri, resource in simdoc.items():
         iri = ts.expand_iri(iri)
-        save_container(ts, resource, iri, recognised_keys=RECOGNISED_KEYS)
+        save_simulation_resource(ts, iri, resource)
 
 
-def get_simulation_info(ts: Triplestore, iri: str):
-    """Return documentation of simulation tool with given iri.
+def save_simulation_resource(ts: Triplestore, iri: str, resource: dict):
+    """Save documentation of simulation tool to the triplestore.
+
+    Arguments:
+        ts: Tripper triplestore documenting the simulation tools.
+        iri: IRI of the simulation tool.
+        siminfo: A dict with the documentation to save.
+    """
+    # TODO: Since simulation resources are classes in the KB, the
+    # correct way would be to add the additional documentation as
+    # restrictions.
+    # What we do here, will be interpreted as annotation properties
+    # by Protege.
+    save_container(ts, resource, iri, recognised_keys=RECOGNISED_KEYS)
+
+
+def load_simulation_resource(ts: Triplestore, iri: str):
+    """Loads documentation of simulation tool from the triplestore.
 
     Arguments:
         ts: Tripper triplestore documenting the simulation tools.

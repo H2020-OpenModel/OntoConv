@@ -5,14 +5,16 @@ __version__ = "0.1.0"
 from .pipelines import (
     generate_pipeline,
     get_data,
-    get_simulation_info,
+    load_simulation_resource,
     populate_triplestore,
+    save_simulation_resource,
 )
 
 __all__ = (
     "__version__",
-    "populate_triplestore",
-    "get_simulation_info",
     "generate_pipeline",
     "get_data",
+    "load_simulation_resource",
+    "populate_triplestore",
+    "save_simulation_resource",
 )
