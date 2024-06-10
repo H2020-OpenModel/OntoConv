@@ -9,6 +9,8 @@ from tripper import OTEIO, RDF, Triplestore
 from tripper.convert import load_container, save_container
 from tripper.convert.convert import BASIC_RECOGNISED_KEYS
 
+from ontoconv.attrdict import AttrDict
+
 # Get rid of FutureWarning from csv.py
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -16,10 +18,11 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 RECOGNISED_KEYS = BASIC_RECOGNISED_KEYS.copy()
 RECOGNISED_KEYS.update(
     {
-        "aiida_plugin": "http://open-model.eu/oip#AiidaPlugin",
-        "command": "http://open-model.eu/oip#Command",
-        "install_command": "http://open-model.eu/oip#InstallCommand",
-        ""
+        "aiida_plugin": "http://open-model.eu/ontologies/oip#AiidaPlugin",
+        "command": "http://open-model.eu/ontologies/oip#Command",
+        "install_command": (
+            "http://open-model.eu/ontologies/oip#InstallCommand"
+        ),
     }
 )
 
@@ -88,7 +91,7 @@ def populate_triplestore(
         ts.bind(prefix, namespace)
 
     # Data resources
-    datadoc = document["data_resources"]
+    datadoc = document.get("data_resources", {})
     for iri, resource in datadoc.items():
         iri = ts.expand_iri(iri)
         save_container(ts, resource, iri, recognised_keys="basic")
@@ -98,11 +101,10 @@ def populate_triplestore(
             ts.add((iri, RDF.type, ts.expand_iri(rtype)))
 
     # Simulation resources
-    simdoc = document["simulation_resources"]
-    for iri, resource in datadoc.items():
+    simdoc = document.get("simulation_resources", {})
+    for iri, resource in simdoc.items():
         iri = ts.expand_iri(iri)
         save_container(ts, resource, iri, recognised_keys=RECOGNISED_KEYS)
-
 
 
 def get_simulation_info(ts: Triplestore, iri: str):
@@ -113,11 +115,11 @@ def get_simulation_info(ts: Triplestore, iri: str):
         iri: IRI of the simulation tool.
 
     Returns
-        A dict documentating the simulation tool.
+        A dict with attriute access documentating the simulation tool.
 
     """
-    resource = load_container(ts, iri)
-    return resource
+    resource = load_container(ts, iri, recognised_keys=RECOGNISED_KEYS)
+    return AttrDict(**resource)
 
 
 def generate_pipeline(

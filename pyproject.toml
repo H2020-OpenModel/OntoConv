@@ -88,6 +88,13 @@ good-names = [
     # Triple components: subject, predicate, object
     "s", "p", "o",
 ]
+generated-members = [
+    # How to tell pylint that this should be limited to members of AttrDict?
+    "aiida_plugin",
+    "command",
+    "install_command",
+]
+
 
 [tool.pytest.ini_options]
 minversion = "7.0"
