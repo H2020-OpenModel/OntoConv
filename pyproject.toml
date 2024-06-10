@@ -90,6 +90,7 @@ good-names = [
 ]
 generated-members = [
     # How to tell pylint that this should be limited to members of AttrDict?
+    # Preferable we should use a regex, like r"AttrDict\..+"
     "aiida_plugin",
     "command",
     "install_command",
