@@ -4,7 +4,6 @@ version: 1
 
 prefixes:
   ss3: "http://open-model.eu/ontologies/ss3#"
-  oip: "http://open-model.eu/ontologies/oip#"
   oteio: "https://w3id.org/emmo/domain/oteio#"
 
 

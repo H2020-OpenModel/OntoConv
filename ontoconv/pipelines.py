@@ -26,6 +26,11 @@ RECOGNISED_KEYS.update(
     }
 )
 
+# Extra prefixes used by OntoConv
+EXTRA_PREFIXES = {
+    "oip": "http://open-model.eu/ontologies/oip#",
+}
+
 
 def get_resource_types(resource: list) -> list:
     """Returns the type(s) of a given resource.
@@ -86,7 +91,8 @@ def populate_triplestore(
     with open(yamlfile, encoding="utf8") as f:
         document = yaml.safe_load(f)
 
-    prefixes = document.get("prefixes", {})
+    prefixes = EXTRA_PREFIXES.copy()
+    prefixes.update(document.get("prefixes", {}))
     for prefix, namespace in prefixes.items():
         ts.bind(prefix, namespace)
 
