@@ -16,5 +16,5 @@ def test_populate_kb():
 
     # Note, we do not check directly against the KB. Instead we use our
     # APIs for such tests. This is done in `test_2_generate_pipeline` and 
-    `test_3_generate_workchain`. 
+    # `test_3_generate_workchain`. 
     
