@@ -114,7 +114,7 @@ def populate_triplestore(
 
 
 def save_simulation_resource(ts: Triplestore, iri: str, resource: dict):
-    """Save documentation of simulation tool to the triplestore.
+    """Save documentation of simulation tools to the triplestore.
 
     Arguments:
         ts: Tripper triplestore documenting the simulation tools.
@@ -137,7 +137,7 @@ def load_simulation_resource(ts: Triplestore, iri: str):
         iri: IRI of the simulation tool.
 
     Returns
-        A dict with attriute access documentating the simulation tool.
+        A dict with attribute access documentating the simulation tool.
 
     """
     resource = load_container(ts, iri, recognised_keys=RECOGNISED_KEYS)
