@@ -89,15 +89,15 @@ def populate_triplestore(
             from.
     """
     with open(yamlfile, encoding="utf8") as f:
-        document = yaml.safe_load(f)
+        documentation = yaml.safe_load(f)
 
     prefixes = EXTRA_PREFIXES.copy()
-    prefixes.update(document.get("prefixes", {}))
+    prefixes.update(documentation.get("prefixes", {}))
     for prefix, namespace in prefixes.items():
         ts.bind(prefix, namespace)
 
     # Data resources
-    datadoc = document.get("data_resources", {})
+    datadoc = documentation.get("data_resources", {})
     for iri, resource in datadoc.items():
         iri = ts.expand_iri(iri)
         save_container(ts, resource, iri, recognised_keys="basic")
@@ -107,7 +107,7 @@ def populate_triplestore(
             ts.add((iri, RDF.type, ts.expand_iri(rtype)))
 
     # Simulation resources
-    simdoc = document.get("simulation_resources", {})
+    simdoc = documentation.get("simulation_resources", {})
     for iri, resource in simdoc.items():
         iri = ts.expand_iri(iri)
         save_simulation_resource(ts, iri, resource)
