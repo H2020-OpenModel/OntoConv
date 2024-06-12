@@ -121,3 +121,18 @@ data_resources:
        functionType: aiidacuds/cuds2datanode
        configuration:
          names: from_cuds
+
+
+simulation_resources:
+
+  ss3:AbaqusSimulation:
+
+    # Name of the AiiDA plugin to use
+    aiida_plugin: execwrapper
+
+    # The command for running the simulation tool (should we support multi-line as for `install_command`?)
+    command: run_abaqus.sh
+
+    # The commands for installing the simulation tool
+    install_command: |
+      pip install git+ssh://git@github.com:H2020-OpenModel/SS3_wrappers.git@master

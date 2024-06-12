@@ -7,9 +7,29 @@ import yaml
 from otelib import OTEClient
 from tripper import OTEIO, RDF, Triplestore
 from tripper.convert import load_container, save_container
+from tripper.convert.convert import BASIC_RECOGNISED_KEYS
+
+from ontoconv.attrdict import AttrDict
 
 # Get rid of FutureWarning from csv.py
 warnings.filterwarnings("ignore", category=FutureWarning)
+
+# Extend the recognised keys used by tripper.convert
+RECOGNISED_KEYS = BASIC_RECOGNISED_KEYS.copy()
+RECOGNISED_KEYS.update(
+    {
+        "aiida_plugin": "http://open-model.eu/ontologies/oip#AiidaPlugin",
+        "command": "http://open-model.eu/ontologies/oip#Command",
+        "install_command": (
+            "http://open-model.eu/ontologies/oip#InstallCommand"
+        ),
+    }
+)
+
+# Extra prefixes used by OntoConv
+EXTRA_PREFIXES = {
+    "oip": "http://open-model.eu/ontologies/oip#",
+}
 
 
 def get_resource_types(resource: list) -> list:
@@ -69,13 +89,15 @@ def populate_triplestore(
             from.
     """
     with open(yamlfile, encoding="utf8") as f:
-        document = yaml.safe_load(f)
+        documentation = yaml.safe_load(f)
 
-    prefixes = document.get("prefixes", {})
+    prefixes = EXTRA_PREFIXES.copy()
+    prefixes.update(documentation.get("prefixes", {}))
     for prefix, namespace in prefixes.items():
         ts.bind(prefix, namespace)
 
-    datadoc = document["data_resources"]
+    # Data resources
+    datadoc = documentation.get("data_resources", {})
     for iri, resource in datadoc.items():
         iri = ts.expand_iri(iri)
         save_container(ts, resource, iri, recognised_keys="basic")
@@ -83,6 +105,43 @@ def populate_triplestore(
         # Add rdf:type relations
         for rtype in get_resource_types(resource):
             ts.add((iri, RDF.type, ts.expand_iri(rtype)))
+
+    # Simulation resources
+    simdoc = documentation.get("simulation_resources", {})
+    for iri, resource in simdoc.items():
+        iri = ts.expand_iri(iri)
+        save_simulation_resource(ts, iri, resource)
+
+
+def save_simulation_resource(ts: Triplestore, iri: str, resource: dict):
+    """Save documentation of simulation tools to the triplestore.
+
+    Arguments:
+        ts: Tripper triplestore documenting the simulation tools.
+        iri: IRI of the simulation tool.
+        siminfo: A dict with the documentation to save.
+    """
+    # TODO: Since simulation resources are classes in the KB, the
+    # correct way would be to add the additional documentation as
+    # restrictions.
+    # What we do here, will be interpreted as annotation properties
+    # by Protege.
+    save_container(ts, resource, iri, recognised_keys=RECOGNISED_KEYS)
+
+
+def load_simulation_resource(ts: Triplestore, iri: str):
+    """Loads documentation of simulation tool from the triplestore.
+
+    Arguments:
+        ts: Tripper triplestore documenting the simulation tools.
+        iri: IRI of the simulation tool.
+
+    Returns
+        A dict with attribute access documentating the simulation tool.
+
+    """
+    resource = load_container(ts, iri, recognised_keys=RECOGNISED_KEYS)
+    return AttrDict(**resource)
 
 
 def generate_pipeline(

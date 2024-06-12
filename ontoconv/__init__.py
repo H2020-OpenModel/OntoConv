@@ -2,4 +2,19 @@
 
 __version__ = "0.1.0"
 
-__all__ = ("__version__",)
+from .pipelines import (
+    generate_pipeline,
+    get_data,
+    load_simulation_resource,
+    populate_triplestore,
+    save_simulation_resource,
+)
+
+__all__ = (
+    "__version__",
+    "generate_pipeline",
+    "get_data",
+    "load_simulation_resource",
+    "populate_triplestore",
+    "save_simulation_resource",
+)
