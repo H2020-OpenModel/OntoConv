@@ -114,7 +114,7 @@ def populate_triplestore(
 
 
 def save_simulation_resource(ts: Triplestore, iri: str, resource: dict):
-    """Save documentation of simulation tool to the triplestore.
+    """Save documentation of simulation tools to the triplestore.
 
     Arguments:
         ts: Tripper triplestore documenting the simulation tools.
