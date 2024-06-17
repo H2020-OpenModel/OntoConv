@@ -133,9 +133,11 @@ simulation_resources:
     # The command for running the simulation tool (should we support multi-line as for `install_command`?)
     command: run_abaqus.sh
 
-    files:
-      the_name_of_the_file.txt: "file://path/to/file"
-      the_name_of_second_file.json: "file://path/to/second/file"
+    files: # These are files that should be copied over to the computer node as is.
+      - filename: the_name_of_the_file.txt
+        source_uri: "file://path/to/file"
+      - filename: the_name_of_second_file.json
+        source_uri: "file://path/to/second/file"
 
     # The commands for installing the wrapper for the simulation tool
     install_command: |
