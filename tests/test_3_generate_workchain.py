@@ -14,8 +14,10 @@ def test_load_simulation_resource():
     SS3 = ts.namespaces["ss3"]
     resource = load_simulation_resource(ts, SS3.AbaqusSimulation)
 
-    print("need to check content of resource.files")
+    print("need to check content of resource.files, check issue #11")
     # assert resource.files == ?
+    # assert resource.output ==
+    # assert resrouce.input ==
 
     assert resource.aiida_plugin == "execwrapper"
     assert resource.command == "run_abaqus.sh"
