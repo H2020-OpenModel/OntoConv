@@ -133,6 +133,10 @@ simulation_resources:
     # The command for running the simulation tool (should we support multi-line as for `install_command`?)
     command: run_abaqus.sh
 
-    # The commands for installing the simulation tool
+    files:
+      the_name_of_the_file.txt: "file://path/to/file"
+      the_name_of_second_file.json: "file://path/to/second/file"
+
+    # The commands for installing the wrapper for the simulation tool
     install_command: |
       pip install git+ssh://git@github.com:H2020-OpenModel/SS3_wrappers.git@master

@@ -21,6 +21,8 @@ RECOGNISED_KEYS.update(
         "aiida_plugin": "http://open-model.eu/ontologies/oip#AiidaPlugin",
         "command": "http://open-model.eu/ontologies/oip#Command",
         "files": "http://open-model.eu/ontologies/oip#Files",
+        "target_file": "http://open-model.eu/ontologies/oip#TargetFiles",
+        "source_iri": "http://open-model.eu/ontologies/oip#SourceIri",
         "install_command": (
             "http://open-model.eu/ontologies/oip#InstallCommand"
         ),
