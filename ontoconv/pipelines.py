@@ -248,7 +248,7 @@ def generate_ontoflow_pipeline(
             resource = load_container(ts, iri, recognised_keys=recognised_keys)
         else:
             r = load_simulation_resource(ts, resourcetype)
-            resource = r[dtype]["ss3:" + suffix]
+            resource = r[dtype]["ss3:" + suffix]  # KRISE,hardkodet!
         for strategy in resource:
             for stype, conf in strategy.items():
                 name = f"{suffix}_{stype}_{i}"
