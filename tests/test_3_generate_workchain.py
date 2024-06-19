@@ -27,13 +27,14 @@ def test_load_simulation_resource():
     assert resource.input == {  # pylint: disable=no-member
         "ss3:AluminiumMaterialCard": [
             {
-                "function": None,
-                "functionType": "application/vnd.dlite-generate",
-                "configuration": {
-                    "datamodel": "http://www.sintef.no/calm/0.1/"
-                    "AluminiumMaterialCard",
-                    "driver": "plugin_abaqus_material",
-                    "location": "Section_materials.inp",
+                "function": {
+                    "functionType": "application/vnd.dlite-generate",
+                    "configuration": {
+                        "datamodel": "http://www.sintef.no/calm/0.1/"
+                        "AluminiumMaterialCard",
+                        "driver": "plugin_abaqus_material",
+                        "location": "Section_materials.inp",
+                    },
                 },
             }
         ]
@@ -42,25 +43,26 @@ def test_load_simulation_resource():
     assert resource.output == {  # pylint: disable=no-member
         "ss3:AbaqusDeformationHistory": [
             {
-                "functionType": "application/vnd.dlite-convert",
-                "function": None,
-                "configuration": {
-                    "outputs": [
-                        {
-                            "label": "cement_output_instance",
-                            "datamodel": "http://www.sintef.no/calm/0.1/"
-                            "AbaqusDeformationHistory",
-                        }
-                    ],
-                    "inputs": [
-                        {
-                            "label": "cement_output",
-                            "datamodel": "http://onto-ns.com/meta/2.0/"
-                            "core.singlefile",
-                        }
-                    ],
-                    "function_name": "abaqus_converter",
-                    "module_name": "ss3_wrappers.abaqus_convert",
+                "function": {
+                    "functionType": "application/vnd.dlite-convert",
+                    "configuration": {
+                        "outputs": [
+                            {
+                                "label": "cement_output_instance",
+                                "datamodel": "http://www.sintef.no/calm/0.1/"
+                                "AbaqusDeformationHistory",
+                            }
+                        ],
+                        "inputs": [
+                            {
+                                "label": "cement_output",
+                                "datamodel": "http://onto-ns.com/meta/2.0/"
+                                "core.singlefile",
+                            }
+                        ],
+                        "function_name": "abaqus_converter",
+                        "module_name": "ss3_wrappers.abaqus_convert",
+                    },
                 },
             }
         ]
