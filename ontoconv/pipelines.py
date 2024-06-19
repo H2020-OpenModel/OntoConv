@@ -134,11 +134,11 @@ def save_simulation_resource(ts: Triplestore, iri: str, resource: dict):
     save_container(ts, resource, iri, recognised_keys=RECOGNISED_KEYS)
 
     # Ensure that all input and output are datasets
-    for input in resource.get("input"):
+    for input in resource.get("input", {}):
         for dataset in input:
             ts.add((dataset, RDF.type, OTEIO.DataSink))
 
-    for output in resource.get("output"):
+    for output in resource.get("output", {}):
         for dataset in output:
             ts.add((dataset, RDF.type, OTEIO.DataSource))
 
@@ -162,7 +162,7 @@ def generate_pipeline(
     ts: Triplestore,
     steps: Sequence[str],
 ) -> dict:
-    """Return a declarative ExecFlow pipeline as a string.
+    """Return a declarative ExecFlow pipeline as a dict.
 
     Arguments:
         ts: Tripper triplestore documenting data sources and sinks.
@@ -185,6 +185,69 @@ def generate_pipeline(
         for strategy in resource:
             for stype, conf in strategy.items():
                 name = f"{name_suffix}_{stype}"
+                d = {stype: name}
+                d.update(conf)
+            names.append(name)
+            strategies.append(d)
+    return {
+        "version": 1,
+        "strategies": strategies,
+        "pipelines": {"pipe": " | ".join(names)},
+    }
+
+
+def generate_ontoflow_pipeline(
+    ts: Triplestore,
+    resources: dict,
+    recognised_keys: "Optional[Union[dict, str]]" = "basic",
+) -> dict:
+    """Return a declarative ExecFlow pipeline as a dict.
+
+    Arguments:
+        ts: Tripper triplestore documenting data sources and sinks.
+        resources: A dict referring to OTEAPI partial pipelines for a set of data
+            source and sinks.  Se the example below for the expected structure.
+        client_iri: IRI of OTELib client to use.
+
+    Returns:
+        Dict-representation of a declarative ExecFlow pipeline.
+
+    Examples:
+        Example of the `resources` argument:
+
+        ```python
+        {'sinks': [
+           {'iri': 'ss3:AbaqusConfiguration', 'resourcetype': 'ss3:AbaqusSimulation'},
+           {'iri': 'ss3:AluminiumMaterialCard', 'resourcetype': 'ss3:AbaqusSimulation'},
+           {'iri': 'ss3:ConcreteMaterialCard', 'resourcetype': 'ss3:AbaqusSimulation'}],
+         'sources': [
+           {'iri': 'ss3kb:abaqus_config1', 'resourcetype': 'dataset'},
+           {'iri': 'ss3:AluminiumMaterialCard', 'resourcetype': 'ss3:MaterialCardGenerator'},
+           {'iri': 'ss3kb:abaqus_materialcard_concrete1', 'resourcetype': 'dataset'}]}
+        ```
+    """
+    names = []
+    strategies = []
+
+    lst = [("output", s) for s in resources.get("sources", [])]
+    lst.extend([("input", s) for s in resources.get("sinks", [])])
+
+    for type, dct in lst:
+        iri = dct["iri"]
+        resourcetype = dct["resourcetype"]
+        suffix = (
+            iri.split("#", 1)[-1] if "#" in iri else iri.rsplit("/", 1)[-1]
+        )
+        if resourcetype == "dataset":
+            resource = load_container(ts, iri, recognised_keys=recognised_keys)
+        else:
+            r = load_container(
+                ts, resourcetype, recognised_keys=recognised_keys
+            )
+            resource = r.get(type, [])
+        for strategy in resource:
+            for stype, conf in strategy.items():
+                name = f"{suffix}_{stype}"
                 d = {stype: name}
                 d.update(conf)
             names.append(name)
