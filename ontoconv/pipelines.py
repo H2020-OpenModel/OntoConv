@@ -124,12 +124,23 @@ def save_simulation_resource(ts: Triplestore, iri: str, resource: dict):
         iri: IRI of the simulation tool.
         siminfo: A dict with the documentation to save.
     """
+    # pylint: disable=redefined-builtin
+
     # TODO: Since simulation resources are classes in the KB, the
     # correct way would be to add the additional documentation as
     # restrictions.
     # What we do here, will be interpreted as annotation properties
     # by Protege.
     save_container(ts, resource, iri, recognised_keys=RECOGNISED_KEYS)
+
+    # Ensure that all input and output are datasets
+    for input in resource.get("input"):
+        for dataset in input:
+            ts.add((dataset, RDF.type, OTEIO.DataSink))
+
+    for output in resource.get("output"):
+        for dataset in output:
+            ts.add((dataset, RDF.type, OTEIO.DataSource))
 
 
 def load_simulation_resource(ts: Triplestore, iri: str):
