@@ -11,31 +11,6 @@ prefixes:
 # knowledge base.
 data_resources:
 
-  # ------- Just stubs sufficiently for OntoFlow -------
-  ss3:fenics_finite_element_mesh:
-    - dataresource:
-        type: ["oteio:DataSink", "ss3:FenicsFiniteElementMesh"]
-
-  ss3:fenics_materials:
-    - dataresource:
-        type: ["oteio:DataSink", "ss3:FenicsMaterials"]
-
-  ss3:fenics_simulation_config:
-    - dataresource:
-        type: ["oteio:DataSink", "ss3:FenicsSimulationConfig"]
-
-  ss3:abaqus_finite_element_mesh:
-    - dataresource:
-        type: ["oteio:DataSink", "ss3:AbaqusFiniteElementMesh"]
-
-  ss3:abaqus_simple_material_card_template:
-    - dataresource:
-        type: ["oteio:DataSink", "ss3:AbaqusSimpleMaterialCardTemplate"]
-
-
-
-  # ------- More complete data resources -------
-
   # Load aluminium material card
   http://open-model.eu/ontologies/ss3#aluminium_material_card:
     - dataresource:
@@ -62,20 +37,6 @@ data_resources:
           - ["amc:Stress_plastic", "map:mapsTo", "micro:PlasticStress"]
           - ["amc:Yield_stress",   "map:mapsTo", "micro:YieldStress"]
 
-
-  # Create the material card input file for Abaqus
-  http://open-model.eu/ontologies/ss3#create_abaqus_input_material_card:
-    - function:
-        functionType: application/vnd.dlite-generate
-        configuration:
-          driver: plugin_abaqus_material
-          # the name of the file is as expected by the Abaqus input template
-          location: Section_materials.inp
-          # the option indicates that we want to write a new file and the header
-          options: "mode=w"
-          label: materialcard_al
-
-
   # Load material for concrete
   http://open-model.eu/ontologies/ss3#concrete_material_card:
     - dataresource:
@@ -86,42 +47,6 @@ data_resources:
          label: materialcard_concrete
          metadata: http://www.sintef.no/calm/0.1/AbaqusSimpleMaterialCard
          driver: "json"
-
-
-  # FIXME - update MaterialCardGenerator instead of appending to existing file
-  # Append to material card input file for Abaqus
-  http://open-model.eu/ontologies/ss3#append_abaqus_input_material_card:
-    - function:
-       functionType: application/vnd.dlite-generate
-       configuration:
-         driver: plugin_abaqus_material
-         # the name of the file is as expected by the Abaqus input template
-         location: Section_materials.inp
-         # the option indicates that we do not write the header
-         options: "mode=a"
-         label: materialcard_concrete
-
-
-  # Create the AiiDA SingleFile nodes in two steps through a Dlite collection
-  # Step1 file stored in a dlite collection
-  http://open-model.eu/ontologies/ss3#file2collection_mat:
-    - function:
-       functionType: aiidacuds/file2collection
-       configuration:
-         path: Section_materials.inp
-         label: material_file
-
-
-  # Step 2 convert the file to an AiiDA node
-  # specific to execution with execflow
-  # the variable names defined in the declarative workflow should correspond to the label "material_file"
-  # from_cuds is not really a label you can't change it is a hard-coded thing
-  http://open-model.eu/ontologies/ss3#cuds2datanode:
-    - function:
-       functionType: aiidacuds/cuds2datanode
-       configuration:
-         names: from_cuds
-
 
 simulation_resources:
 
