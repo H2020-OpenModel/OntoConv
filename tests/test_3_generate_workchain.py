@@ -14,7 +14,7 @@ def test_load_simulation_resource():
     SS3 = ts.namespaces["ss3"]
     resource = load_simulation_resource(ts, SS3.AbaqusSimulation)
 
-    assert resource.files == [
+    assert resource.files == [  # pylint: disable=no-member
         {
             "filename": "the_name_of_the_file.txt",
             "source_uri": "file://path/to/file",
@@ -24,27 +24,28 @@ def test_load_simulation_resource():
             "source_uri": "file://path/to/second/file",
         },
     ]
-    assert resource.input == {
+    assert resource.input == {  # pylint: disable=no-member
         "ss3:AluminiumMaterialCard": [
             {
                 "function": {
+                    "functionType": "application/vnd.dlite-generate",
                     "configuration": {
-                        "location": "Section_materials.inp",
                         "datamodel": "http://www.sintef.no/calm/0.1/"
                         "AluminiumMaterialCard",
                         "driver": "plugin_abaqus_material",
+                        "location": "Section_materials.inp",
                     },
-                    "functionType": "application/vnd.dlite-generate",
-                }
+                },
             }
         ]
     }
-    assert resource.output == {
+
+    assert resource.output == {  # pylint: disable=no-member
         "ss3:AbaqusDeformationHistory": [
             {
                 "function": {
+                    "functionType": "application/vnd.dlite-convert",
                     "configuration": {
-                        "module_name": "ss3_wrappers.abaqus_convert",
                         "outputs": [
                             {
                                 "label": "cement_output_instance",
@@ -60,9 +61,9 @@ def test_load_simulation_resource():
                             }
                         ],
                         "function_name": "abaqus_converter",
+                        "module_name": "ss3_wrappers.abaqus_convert",
                     },
-                    "functionType": "application/vnd.dlite-convert",
-                }
+                },
             }
         ]
     }

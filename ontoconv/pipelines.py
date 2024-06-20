@@ -205,8 +205,9 @@ def generate_ontoflow_pipeline(
 
     Arguments:
         ts: Tripper triplestore documenting data sources and sinks.
-        resources: A dict referring to OTEAPI partial pipelines for a set of data
-            source and sinks.  Se the example below for the expected structure.
+        resources: A dict referring to OTEAPI partial pipelines for
+            a set of data sources and sinks.
+            See the example below for the expected structure.
         client_iri: IRI of OTELib client to use.
 
     Returns:
@@ -217,22 +218,27 @@ def generate_ontoflow_pipeline(
 
         ```python
         {'sinks': [
-           {'iri': 'ss3:AbaqusConfiguration', 'resourcetype': 'ss3:AbaqusSimulation'},
-           {'iri': 'ss3:AluminiumMaterialCard', 'resourcetype': 'ss3:AbaqusSimulation'},
-           {'iri': 'ss3:ConcreteMaterialCard', 'resourcetype': 'ss3:AbaqusSimulation'}],
+           {'iri': 'ss3:AbaqusConfiguration',
+            'resourcetype': 'ss3:AbaqusSimulation'},
+           {'iri': 'ss3:AluminiumMaterialCard',
+            'resourcetype': 'ss3:AbaqusSimulation'},
+           {'iri': 'ss3:ConcreteMaterialCard',
+            'resourcetype': 'ss3:AbaqusSimulation'}],
          'sources': [
            {'iri': 'ss3kb:abaqus_config1', 'resourcetype': 'dataset'},
-           {'iri': 'ss3:AluminiumMaterialCard', 'resourcetype': 'ss3:MaterialCardGenerator'},
-           {'iri': 'ss3kb:abaqus_materialcard_concrete1', 'resourcetype': 'dataset'}]}
+           {'iri': 'ss3:AluminiumMaterialCard',
+            'resourcetype': 'ss3:MaterialCardGenerator'},
+           {'iri': 'ss3kb:abaqus_materialcard_concrete1',
+            'resourcetype': 'dataset'}]}
         ```
     """
-    names = []
+    names = {"input": [], "output": []}
     strategies = []
 
     lst = [("output", s) for s in resources.get("sources", [])]
     lst.extend([("input", s) for s in resources.get("sinks", [])])
-
-    for type, dct in lst:
+    i = 1
+    for dtype, dct in lst:
         iri = dct["iri"]
         resourcetype = dct["resourcetype"]
         suffix = (
@@ -241,21 +247,26 @@ def generate_ontoflow_pipeline(
         if resourcetype == "dataset":
             resource = load_container(ts, iri, recognised_keys=recognised_keys)
         else:
-            r = load_container(
-                ts, resourcetype, recognised_keys=recognised_keys
-            )
-            resource = r.get(type, [])
+            r = load_simulation_resource(ts, resourcetype)
+            try:
+                resource = r[dtype][iri]
+            except KeyError:
+                resource = r[dtype][ts.prefix_iri(iri)]
         for strategy in resource:
             for stype, conf in strategy.items():
-                name = f"{suffix}_{stype}"
-                d = {stype: name}
-                d.update(conf)
-            names.append(name)
-            strategies.append(d)
+                name = f"{suffix}_{stype}_{i}"
+                conf[stype] = name
+                i += 1
+                names[dtype].append(name)
+                strategies.append(conf)
     return {
         "version": 1,
         "strategies": strategies,
-        "pipelines": {"pipe": " | ".join(names)},
+        "pipelines": {
+            "pipe": " | ".join(names["output"])
+            + " | "
+            + " | ".join(names["input"])
+        },
     }
 
 
