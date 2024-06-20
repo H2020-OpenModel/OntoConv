@@ -307,11 +307,12 @@ def add_execflow_decoration_to_pipeline(strategies, names):
     # file to AiiDA datanode.
     func = [f for f in functions if f["function"] in names["input"]]
 
-    locations = (
+    locations = set(
         f["configuration"]["location"]
         for f in func
         if "location" in f["configuration"]
     )
+    print(locations)
 
     numfile = 1
     labels = []
