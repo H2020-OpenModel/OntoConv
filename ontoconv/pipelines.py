@@ -302,8 +302,8 @@ def add_execflow_decoration_to_pipeline(strategies, names):
                 names["output"].insert(0, "datanode2cuds")
                 break
 
-    # Add cuds2datanode if not already present, if functions are present
-    # in the sink strategies. Also add corresponing functions to convert
+    # Add cuds2datanode if not already present, and files are created
+    # in the sink strategies. Also add corresponding functions to convert
     # file to AiiDA datanode.
     func = [f for f in functions if f["function"] in names["input"]]
 
