@@ -21,6 +21,8 @@ RECOGNISED_KEYS.update(
         "aiida_plugin": "http://open-model.eu/ontologies/oip#AiidaPlugin",
         "command": "http://open-model.eu/ontologies/oip#Command",
         "files": "http://open-model.eu/ontologies/oip#Files",
+        "input": "http://open-model.eu/ontologies/oip#SimulationToolInput",
+        "output": "http://open-model.eu/ontologies/oip#SimulationToolOutput",
         "install_command": (
             "http://open-model.eu/ontologies/oip#InstallCommand"
         ),
@@ -122,12 +124,23 @@ def save_simulation_resource(ts: Triplestore, iri: str, resource: dict):
         iri: IRI of the simulation tool.
         siminfo: A dict with the documentation to save.
     """
+    # pylint: disable=redefined-builtin
+
     # TODO: Since simulation resources are classes in the KB, the
     # correct way would be to add the additional documentation as
     # restrictions.
     # What we do here, will be interpreted as annotation properties
     # by Protege.
     save_container(ts, resource, iri, recognised_keys=RECOGNISED_KEYS)
+
+    # Ensure that all input and output are datasets
+    for input in resource.get("input", {}):
+        for dataset in input:
+            ts.add((dataset, RDF.type, OTEIO.DataSink))
+
+    for output in resource.get("output", {}):
+        for dataset in output:
+            ts.add((dataset, RDF.type, OTEIO.DataSource))
 
 
 def load_simulation_resource(ts: Triplestore, iri: str):
@@ -149,7 +162,7 @@ def generate_pipeline(
     ts: Triplestore,
     steps: Sequence[str],
 ) -> dict:
-    """Return a declarative ExecFlow pipeline as a string.
+    """Return a declarative ExecFlow pipeline as a dict.
 
     Arguments:
         ts: Tripper triplestore documenting data sources and sinks.
@@ -180,6 +193,80 @@ def generate_pipeline(
         "version": 1,
         "strategies": strategies,
         "pipelines": {"pipe": " | ".join(names)},
+    }
+
+
+def generate_ontoflow_pipeline(
+    ts: Triplestore,
+    resources: dict,
+    recognised_keys: "Optional[Union[dict, str]]" = "basic",
+) -> dict:
+    """Return a declarative ExecFlow pipeline as a dict.
+
+    Arguments:
+        ts: Tripper triplestore documenting data sources and sinks.
+        resources: A dict referring to OTEAPI partial pipelines for
+            a set of data sources and sinks.
+            See the example below for the expected structure.
+        client_iri: IRI of OTELib client to use.
+
+    Returns:
+        Dict-representation of a declarative ExecFlow pipeline.
+
+    Examples:
+        Example of the `resources` argument:
+
+        ```python
+        {'sinks': [
+           {'iri': 'ss3:AbaqusConfiguration',
+            'resourcetype': 'ss3:AbaqusSimulation'},
+           {'iri': 'ss3:AluminiumMaterialCard',
+            'resourcetype': 'ss3:AbaqusSimulation'},
+           {'iri': 'ss3:ConcreteMaterialCard',
+            'resourcetype': 'ss3:AbaqusSimulation'}],
+         'sources': [
+           {'iri': 'ss3kb:abaqus_config1', 'resourcetype': 'dataset'},
+           {'iri': 'ss3:AluminiumMaterialCard',
+            'resourcetype': 'ss3:MaterialCardGenerator'},
+           {'iri': 'ss3kb:abaqus_materialcard_concrete1',
+            'resourcetype': 'dataset'}]}
+        ```
+    """
+    names = {"input": [], "output": []}
+    strategies = []
+
+    lst = [("output", s) for s in resources.get("sources", [])]
+    lst.extend([("input", s) for s in resources.get("sinks", [])])
+    i = 1
+    for dtype, dct in lst:
+        iri = dct["iri"]
+        resourcetype = dct["resourcetype"]
+        suffix = (
+            iri.split("#", 1)[-1] if "#" in iri else iri.rsplit("/", 1)[-1]
+        )
+        if resourcetype == "dataset":
+            resource = load_container(ts, iri, recognised_keys=recognised_keys)
+        else:
+            r = load_simulation_resource(ts, resourcetype)
+            try:
+                resource = r[dtype][iri]
+            except KeyError:
+                resource = r[dtype][ts.prefix_iri(iri)]
+        for strategy in resource:
+            for stype, conf in strategy.items():
+                name = f"{suffix}_{stype}_{i}"
+                conf[stype] = name
+                i += 1
+                names[dtype].append(name)
+                strategies.append(conf)
+    return {
+        "version": 1,
+        "strategies": strategies,
+        "pipelines": {
+            "pipe": " | ".join(names["output"])
+            + " | "
+            + " | ".join(names["input"])
+        },
     }
 
 

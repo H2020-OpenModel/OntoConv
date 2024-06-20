@@ -14,8 +14,59 @@ def test_load_simulation_resource():
     SS3 = ts.namespaces["ss3"]
     resource = load_simulation_resource(ts, SS3.AbaqusSimulation)
 
-    print("need to check content of resource.files")
-    # assert resource.files == ?
+    assert resource.files == [  # pylint: disable=no-member
+        {
+            "filename": "the_name_of_the_file.txt",
+            "source_uri": "file://path/to/file",
+        },
+        {
+            "filename": "the_name_of_second_file.json",
+            "source_uri": "file://path/to/second/file",
+        },
+    ]
+    assert resource.input == {  # pylint: disable=no-member
+        "ss3:AluminiumMaterialCard": [
+            {
+                "function": {
+                    "functionType": "application/vnd.dlite-generate",
+                    "configuration": {
+                        "datamodel": "http://www.sintef.no/calm/0.1/"
+                        "AluminiumMaterialCard",
+                        "driver": "plugin_abaqus_material",
+                        "location": "Section_materials.inp",
+                    },
+                },
+            }
+        ]
+    }
+
+    assert resource.output == {  # pylint: disable=no-member
+        "ss3:AbaqusDeformationHistory": [
+            {
+                "function": {
+                    "functionType": "application/vnd.dlite-convert",
+                    "configuration": {
+                        "outputs": [
+                            {
+                                "label": "cement_output_instance",
+                                "datamodel": "http://www.sintef.no/calm/0.1/"
+                                "AbaqusDeformationHistory",
+                            }
+                        ],
+                        "inputs": [
+                            {
+                                "label": "cement_output",
+                                "datamodel": "http://onto-ns.com/meta/2.0/"
+                                "core.singlefile",
+                            }
+                        ],
+                        "function_name": "abaqus_converter",
+                        "module_name": "ss3_wrappers.abaqus_convert",
+                    },
+                },
+            }
+        ]
+    }
 
     assert resource.aiida_plugin == "execwrapper"
     assert resource.command == "run_abaqus.sh"
