@@ -68,3 +68,93 @@ def test_generate_execflow_pipeline():
 
     with open(outdir / "pipeline2.yml", "w", encoding="utf8") as f:
         yaml.safe_dump(pipeline, f, sort_keys=False)
+
+    with open(outdir / "pipeline2.yml", encoding="utf8") as f:
+        data = yaml.safe_load(f)
+
+    assert data["version"] == 1
+    assert len(data["strategies"]) == 6
+
+    # check that the following strategies are present
+    strategies = [
+        "datanode2cuds",
+        "AbaqusDeformationHistory_function_1",
+        "concrete_material_card_dataresource_2",
+        "AluminiumMaterialCard_function_3",
+        "AluminiumMaterialCard_function_3_file_to_aiida_datanode",
+        "cuds2datanode",
+    ]
+    # In strategies, find all the values of the keys
+    # 'function' and 'dataresource'
+    names = []
+    for strategy in data["strategies"]:
+        if "function" in strategy:
+            names.append(strategy["function"])
+        if "dataresource" in strategy:
+            names.append(strategy["dataresource"])
+    # Check that the same strategies are present in the pipeline
+    assert set(strategies) == set(names)
+
+    # check a dataset
+    strat = next(
+        strategy
+        for strategy in data["strategies"]
+        if strategy.get("dataresource")
+        == "concrete_material_card_dataresource_2"
+    )
+    assert strat == {
+        "downloadUrl": "file://tests/tests_dlite_plugins/testfiles"
+        "/input/material_card_concrete.json",
+        "mediaType": "application/vnd.dlite-parse",
+        "type": "ss3:ConcreteMaterialCard",
+        "configuration": {
+            "label": "materialcard_concrete",
+            "driver": "json",
+            "metadata": "http://www.sintef.no/calm/0.1/"
+            "AbaqusSimpleMaterialCard",
+        },
+        "dataresource": "concrete_material_card_dataresource_2",
+    }
+    # check a function sepcified in the documentation
+    strat = next(
+        strategy
+        for strategy in data["strategies"]
+        if strategy.get("function") == "AbaqusDeformationHistory_function_1"
+    )
+    assert strat == {
+        "configuration": {
+            "function_name": "abaqus_converter",
+            "module_name": "ss3_wrappers.abaqus_convert",
+            "inputs": [
+                {
+                    "label": "cement_output",
+                    "datamodel": "http://onto-ns.com/meta/2.0/"
+                    "core.singlefile",
+                }
+            ],
+            "outputs": [
+                {
+                    "label": "cement_output_instance",
+                    "datamodel": "http://www.sintef.no/calm/0.1/"
+                    "AbaqusDeformationHistory",
+                }
+            ],
+        },
+        "functionType": "application/vnd.dlite-convert",
+        "function": "AbaqusDeformationHistory_function_1",
+    }
+    # Check the function that converts a file to an AiiDA data node
+    strat = next(
+        strategy
+        for strategy in data["strategies"]
+        if strategy.get("function")
+        == "AluminiumMaterialCard_function_3_file_to_aiida_datanode"
+    )
+    assert strat == {
+        "function": "AluminiumMaterialCard_function_3_file_to_aiida_datanode",
+        "functionType": "aiidacuds/file2collection",
+        "configuration": {
+            "path": "Section_materials.inp",
+            "label": "AluminiumMaterialCard_function_3_file",
+        },
+    }
