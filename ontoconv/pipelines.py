@@ -256,6 +256,9 @@ def generate_ontoflow_pipeline(
                 i += 1
                 names[dtype].append(name)
                 strategies.append(conf)
+
+    strategies, names = add_execflow_decoration_to_pipeline(strategies, names)
+
     return {
         "version": 1,
         "strategies": strategies,
@@ -265,6 +268,78 @@ def generate_ontoflow_pipeline(
             + " | ".join(names["input"])
         },
     }
+
+
+def add_execflow_decoration_to_pipeline(strategies, names):
+    """Add ExecFlow decoration to the pipeline.
+
+    Arguments:
+        strategies: List of strategies in the pipeline.
+        names: Dict with one list of names for the output (source)
+          strategies and one list of names for the input (sink) strategies.
+    """
+    functions = [f for f in strategies if "function" in f.keys()]
+
+    # Add datanode2cuds if not already present, if a function is present
+    # in the source strategies.
+    if not any(f["function"] == "datanode2cuds" for f in functions):
+        original_ouput_names = names["output"].copy()
+        for name in original_ouput_names:
+            func = [f for f in functions if f["function"] == name]
+            if len(func) > 1:
+                raise ValueError(f"Multiple functions with name {name}")
+            if len(func) == 1:
+                strategies.append(
+                    {
+                        "function": "datanode2cuds",
+                        "functionType": "aiidacuds/datanode2cuds",
+                        "configuration": {"names": "to_cuds"},
+                    }
+                )
+                names["output"].insert(0, "datanode2cuds")
+                break
+
+    # Add cuds2datanode if not already present, if functions are present
+    # in the sink strategies. Also add corresponing functions to convert
+    # file to AiiDA datanode.
+    func = [f for f in functions if f["function"] in names["input"]]
+
+    locations = (
+        f["configuration"]["location"]
+        for f in func
+        if "location" in f["configuration"]
+    )
+
+    numfile = 1
+    labels = []
+    for loc in locations:
+        # find the function that has the location in its configuration
+        namebasis = [f for f in func if f["configuration"]["location"] == loc][
+            0
+        ]["function"]
+        label = f"{namebasis}_file"
+        function_name = label + "_to_aiida_datanode"
+        strategies.append(
+            {
+                "function": function_name,
+                "functionType": "aiidacuds/file2collection",
+                "configuration": {"path": loc, "label": label},
+            }
+        )
+        names["input"].append(function_name)
+        labels.append(label)
+        numfile += 1
+    if len(labels) > 0:
+        strategies.append(
+            {
+                "function": "cuds2datanode",
+                "functionType": "aiidacuds/cuds2datanode",
+                "configuration": {"names": "from_cuds"},
+            }
+        )
+        names["input"].append("cuds2datanode")
+
+    return strategies, names
 
 
 def get_data(
