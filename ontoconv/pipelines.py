@@ -312,7 +312,6 @@ def add_execflow_decoration_to_pipeline(strategies, names):
         for f in func
         if "location" in f["configuration"]
     )
-    print(locations)
 
     numfile = 1
     labels = []
