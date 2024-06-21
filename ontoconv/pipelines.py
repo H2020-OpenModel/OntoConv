@@ -255,7 +255,7 @@ def generate_ontoflow_pipeline(
                     resource = r[dtype][ts.prefix_iri(iri)]
                 except KeyError as exc:
                     raise KeyError(
-                        f"Could not find {dtype} {iri} in {r['iri']}"
+                        f"Could not find {dtype} {iri} in {resourcetype}"
                     ) from exc
         for strategy in resource:
             for stype, conf in strategy.items():
