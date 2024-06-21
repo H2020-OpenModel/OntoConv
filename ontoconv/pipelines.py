@@ -251,7 +251,12 @@ def generate_ontoflow_pipeline(
             try:
                 resource = r[dtype][iri]
             except KeyError:
-                resource = r[dtype][ts.prefix_iri(iri)]
+                try:
+                    resource = r[dtype][ts.prefix_iri(iri)]
+                except KeyError as exc:
+                    raise KeyError(
+                        f"Could not find {dtype} {iri} in {r['iri']}"
+                    ) from exc
         for strategy in resource:
             for stype, conf in strategy.items():
                 name = f"{suffix}_{stype}_{i}"
@@ -261,6 +266,8 @@ def generate_ontoflow_pipeline(
                 strategies.append(conf)
 
     strategies, names = add_execflow_decoration_to_pipeline(strategies, names)
+    # if len(strategies["sinks"]) == 0:
+    #
 
     return {
         "version": 1,
