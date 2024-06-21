@@ -38,6 +38,7 @@ pre-commit = [
 testing = [
     "pytest ~=7.4",
     "pytest-cov ~=4.1",
+    "deepdiff ~=7.0",
 ]
 dev = [
     "pre-commit ~=2.21",
