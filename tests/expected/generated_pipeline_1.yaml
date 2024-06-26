@@ -1,0 +1,15 @@
+version: 1
+strategies:
+- functionType: application/vnd.dlite-generate
+  configuration:
+    datamodel: http://onto-ns.com/meta/0.1/Blob
+    driver: blob
+    label: cement_output
+    location: ExecFlowResult_cement_output.txt
+  function: AbaqusDeformationHistory_function_1
+- function: datanode2cuds
+  functionType: aiidacuds/datanode2cuds
+  configuration:
+    names: to_cuds
+pipelines:
+  pipe: datanode2cuds | AbaqusDeformationHistory_function_1

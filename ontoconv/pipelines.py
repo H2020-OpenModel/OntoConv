@@ -238,6 +238,10 @@ def generate_ontoflow_pipeline(
     lst = [("output", s) for s in resources.get("sources", [])]
     lst.extend([("input", s) for s in resources.get("sinks", [])])
     i = 1
+
+    save_final_output = False
+    if resources["sinks"] == []:
+        save_final_output = True
     for dtype, dct in lst:
         iri = dct["iri"]
         resourcetype = dct["resourcetype"]
@@ -245,6 +249,12 @@ def generate_ontoflow_pipeline(
             iri.split("#", 1)[-1] if "#" in iri else iri.rsplit("/", 1)[-1]
         )
         if resourcetype == "dataset":
+            if save_final_output:
+                warnings.warn(
+                    "There is no sink, therefor it does not make sense to "
+                    "create a pipeline with an already existing dataset as "
+                    "source."
+                )
             resource = load_container(ts, iri, recognised_keys=recognised_keys)
         else:
             r = load_simulation_resource(ts, resourcetype)
@@ -257,6 +267,23 @@ def generate_ontoflow_pipeline(
                     raise KeyError(
                         f"Could not find {dtype} {iri} in {resourcetype}"
                     ) from exc
+        if save_final_output:
+            resources_for_saving = []
+            for result in resource[0]["function"]["configuration"]["inputs"]:
+                new_resource = {
+                    "function": {
+                        "functionType": "application/vnd.dlite-generate",
+                        "configuration": {
+                            "datamodel": "http://onto-ns.com/meta/0.1/Blob",
+                            "driver": "blob",
+                            "label": result["label"],
+                            "location": f"ExecFlowResult_{result['label']}.txt",
+                        },
+                    }
+                }
+                resources_for_saving.append(new_resource)
+            resource = resources_for_saving
+
         for strategy in resource:
             for stype, conf in strategy.items():
                 name = f"{suffix}_{stype}_{i}"
@@ -266,17 +293,18 @@ def generate_ontoflow_pipeline(
                 strategies.append(conf)
 
     strategies, names = add_execflow_decoration_to_pipeline(strategies, names)
-    # if len(strategies["sinks"]) == 0:
-    #
+
+    source_pp = " | ".join(names["output"])
+    sink_pp = " | ".join(names["input"])
+    if len(sink_pp) == 0:
+        pipe = source_pp
+    else:
+        pipe = source_pp + " | " + sink_pp
 
     return {
         "version": 1,
         "strategies": strategies,
-        "pipelines": {
-            "pipe": " | ".join(names["output"])
-            + " | "
-            + " | ".join(names["input"])
-        },
+        "pipelines": {"pipe": pipe},
     }
 
 
