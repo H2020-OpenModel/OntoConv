@@ -12,4 +12,5 @@ strategies:
   configuration:
     names: to_cuds
 pipelines:
+
   pipe: datanode2cuds | AbaqusDeformationHistory_function_1

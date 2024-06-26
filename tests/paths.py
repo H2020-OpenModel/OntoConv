@@ -10,3 +10,4 @@ testdir = Path(__file__).resolve().parent
 rootdir = testdir.parent
 indir = testdir / "input"
 outdir = testdir / "output"
+expecteddir = testdir / "expected"
