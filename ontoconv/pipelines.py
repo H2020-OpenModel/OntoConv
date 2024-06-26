@@ -196,7 +196,7 @@ def generate_pipeline(
     }
 
 
-def generate_ontoflow_pipeline(
+def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-locals
     ts: Triplestore,
     resources: dict,
     recognised_keys: "Optional[Union[dict, str]]" = "basic",
@@ -277,7 +277,8 @@ def generate_ontoflow_pipeline(
                             "datamodel": "http://onto-ns.com/meta/0.1/Blob",
                             "driver": "blob",
                             "label": result["label"],
-                            "location": f"ExecFlowResult_{result['label']}.txt",
+                            "location": "ExecFlowResult_"
+                            f"{result['label']}.txt",
                         },
                     }
                 }
