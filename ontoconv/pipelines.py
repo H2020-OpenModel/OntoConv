@@ -197,7 +197,7 @@ def generate_pipeline(
     }
 
 
-def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-locals
+def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-locals, too-many-statements
     ts: Triplestore,
     resources: dict,
     recognised_keys: "Optional[Union[dict, str]]" = "basic",
@@ -260,31 +260,78 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
         else:
             r = load_simulation_resource(ts, resourcetype)
             try:
-                resource = r[dtype][iri]
+                resource_info = r[dtype][iri]
             except KeyError:
                 try:
-                    resource = r[dtype][ts.prefix_iri(iri)]
+                    resource_info = r[dtype][ts.prefix_iri(iri)]
                 except KeyError as exc:
                     raise KeyError(
                         f"Could not find {dtype} {iri} in {resourcetype}"
                     ) from exc
-        if save_final_output:
-            resources_for_saving = []
-            for result in resource[0]["function"]["configuration"]["inputs"]:
-                new_resource = {
-                    "function": {
-                        "functionType": "application/vnd.dlite-generate",
-                        "configuration": {
-                            "datamodel": "http://onto-ns.com/meta/0.1/Blob",
-                            "driver": "blob",
-                            "label": result["label"],
-                            "location": "ExecFlowResult_"
-                            f"{result['label']}.txt",
-                        },
-                    }
-                }
-                resources_for_saving.append(new_resource)
-            resource = resources_for_saving
+            if dtype == "input":
+                resource = resource_info
+            else:
+                try:
+                    datanodetype = r["aiida_datanodes"][iri]
+                except KeyError:
+                    try:
+                        datanodetype = r["aiida_datanodes"][ts.prefix_iri(iri)]
+                    except KeyError as exc:
+                        raise KeyError(
+                            f"Could not find {iri} in {r['aiida_datanodes']}"
+                        ) from exc
+                if save_final_output:
+                    resource = [
+                        {
+                            "function": {
+                                "functionType": "application/"
+                                "vnd.dlite-generate",
+                                "configuration": {
+                                    "datamodel": "http://onto-ns.com/"
+                                    "meta/0.1/Blob",
+                                    "driver": "blob",
+                                    "label": f"{suffix}_aiida_datanode",
+                                    "location": resource_info[0][
+                                        "dataresource"
+                                    ]["downloadUrl"],
+                                },
+                            },
+                        }
+                    ]
+
+                else:
+                    resource = [
+                        {
+                            "function": {
+                                "functionType": "application/"
+                                "vnd.dlite-convert",
+                                "configuration": {
+                                    "function_name": "singlefile_converter",
+                                    "module_name": "ss3_wrappers."
+                                    "singlefile_converter",
+                                    "inputs": [
+                                        {
+                                            "label": f"{suffix}"
+                                            "_aiida_datanode",
+                                            "datamodel": datanodetype,
+                                        }
+                                    ],
+                                    "outputs": [
+                                        {
+                                            "label": f"{suffix}_"
+                                            "oteapi_instance",
+                                            "datamodel": resource_info[0][
+                                                "dataresource"
+                                            ]["configuration"]["datamodel"],
+                                        }
+                                    ],
+                                    "parse_driver": resource_info[0][
+                                        "dataresource"
+                                    ]["configuration"]["driver"],
+                                },
+                            }
+                        }
+                    ]
 
         for strategy in resource:
             for stype, conf in strategy.items():

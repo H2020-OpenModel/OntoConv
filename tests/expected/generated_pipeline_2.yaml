@@ -2,49 +2,48 @@ version: 1
 strategies:
 - downloadUrl: file://tests/testfiles/input_data/abaqus_conf.zip
   mediaType: application/vnd.dlite-parse
-  configuration:
-    label: abaqus_config
-    options: inputfile=CementModel_Final_contact.inp;ppfile=OpenODB7.py
-    metadata: http://www.sintef.no/calm/0.1/AbaqusConfiguration
-    driver: abaqus_configuration
   type: ss3:AbaqusConfiguration
+  configuration:
+    metadata: http://www.sintef.no/calm/0.1/AbaqusConfiguration
+    options: inputfile=CementModel_Final_contact.inp;ppfile=OpenODB7.py
+    driver: abaqus_configuration
   dataresource: abaqus_config1_dataresource_1
-- configuration:
+- functionType: application/vnd.dlite-convert
+  configuration:
     function_name: singlefile_converter
-    outputs:
-    - label: materialinst
-      datamodel: http://onto-ns.com/meta/calm/0.1/AluminiumMaterialCard
     module_name: ss3_wrappers.singlefile_converter
     inputs:
-    - label: generated_material_card
+    - label: AluminiumMaterialCard_aiida_datanode
       datamodel: http://onto-ns.com/meta/2.0/core.singlefile
-  functionType: application/vnd.dlite-convert
+    outputs:
+    - label: AluminiumMaterialCard_oteapi_instance
+      datamodel: http://onto-ns.com/meta/calm/0.1/AluminiumMaterialCard
+    parse_driver: json
   function: AluminiumMaterialCard_function_2
 - downloadUrl: file://tests/testfiles/input_data/material_card_concrete.json
   mediaType: application/vnd.dlite-parse
   type: ss3:ConcreteMaterialCard
   configuration:
-    label: materialcard_concrete
-    driver: json
     metadata: http://www.sintef.no/calm/0.1/ConcreteMaterialCard
-  dataresource: abaqus_materialcard_concrete1_dataresource_3
-- configuration:
     driver: json
+  dataresource: abaqus_materialcard_concrete1_dataresource_3
+- functionType: application/vnd.dlite-generate
+  configuration:
     location: abaqusconf.json
+    driver: json
     datamodel: http://www.sintef.no/calm/0.1/AbaqusConfiguration
-  functionType: application/vnd.dlite-generate
   function: AbaqusConfiguration_function_4
-- configuration:
-    location: Section_materials.inp
+- functionType: application/vnd.dlite-generate
+  configuration:
     driver: plugin_abaqus_material
+    location: Section_materials.inp
     datamodel: http://www.sintef.no/calm/0.1/AluminiumMaterialCard
-  functionType: application/vnd.dlite-generate
   function: AluminiumMaterialCard_function_5
 - functionType: application/vnd.dlite-generate
   configuration:
     driver: plugin_abaqus_material
-    datamodel: http://www.sintef.no/calm/0.1/ConcreteMaterialCard
     location: Section_materials.inp
+    datamodel: http://www.sintef.no/calm/0.1/ConcreteMaterialCard
   function: ConcreteMaterialCard_function_6
 - function: datanode2cuds
   functionType: aiidacuds/datanode2cuds

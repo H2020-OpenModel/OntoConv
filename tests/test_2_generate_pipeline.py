@@ -121,24 +121,28 @@ def test_generate_execflow_pipeline():
         for strategy in data["strategies"]
         if strategy.get("function") == "AbaqusDeformationHistory_function_1"
     )
+    print("  - - - -  --")
+    print(strat)
+    print("                     ")
     assert strat == {
         "configuration": {
-            "function_name": "abaqus_converter",
-            "module_name": "ss3_wrappers.abaqus_convert",
+            "function_name": "singlefile_converter",
+            "module_name": "ss3_wrappers.singlefile_converter",
             "inputs": [
                 {
-                    "label": "cement_output",
+                    "label": "AbaqusDeformationHistory_aiida_datanode",
                     "datamodel": "http://onto-ns.com/meta/2.0/"
                     "core.singlefile",
                 }
             ],
             "outputs": [
                 {
-                    "label": "cement_output_instance",
+                    "label": "AbaqusDeformationHistory_oteapi_instance",
                     "datamodel": "http://www.sintef.no/calm/0.1/"
                     "AbaqusDeformationHistory",
                 }
             ],
+            "parse_driver": "plugin_abaqus_output",
         },
         "functionType": "application/vnd.dlite-convert",
         "function": "AbaqusDeformationHistory_function_1",

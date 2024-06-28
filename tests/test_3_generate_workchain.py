@@ -43,25 +43,13 @@ def test_load_simulation_resource():
     assert resource.output == {  # pylint: disable=no-member
         "ss3:AbaqusDeformationHistory": [
             {
-                "function": {
-                    "functionType": "application/vnd.dlite-convert",
+                "dataresource": {
+                    "mediaType": "application/vnd.dlite-parse",
+                    "downloadUrl": "abaqus_deformation_history.txt",
                     "configuration": {
-                        "outputs": [
-                            {
-                                "label": "cement_output_instance",
-                                "datamodel": "http://www.sintef.no/calm/0.1/"
-                                "AbaqusDeformationHistory",
-                            }
-                        ],
-                        "inputs": [
-                            {
-                                "label": "cement_output",
-                                "datamodel": "http://onto-ns.com/meta/2.0/"
-                                "core.singlefile",
-                            }
-                        ],
-                        "function_name": "abaqus_converter",
-                        "module_name": "ss3_wrappers.abaqus_convert",
+                        "datamodel": "http://www.sintef.no/calm/0.1/"
+                        "AbaqusDeformationHistory",
+                        "driver": "plugin_abaqus_output",
                     },
                 },
             }
