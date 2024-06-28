@@ -4,13 +4,12 @@ strategies:
   configuration:
     datamodel: http://onto-ns.com/meta/0.1/Blob
     driver: blob
-    label: cement_output
-    location: ExecFlowResult_cement_output.txt
+    label: AbaqusDeformationHistory_aiida_datanode
+    location: abaqus_deformation_history.txt
   function: AbaqusDeformationHistory_function_1
 - function: datanode2cuds
   functionType: aiidacuds/datanode2cuds
   configuration:
     names: to_cuds
 pipelines:
-
   pipe: datanode2cuds | AbaqusDeformationHistory_function_1

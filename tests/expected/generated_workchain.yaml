@@ -40,7 +40,7 @@ steps:
         - "generated_material_card.json"
     postprocess:
       # the identifier of the output is defined in the documentation.
-      - "{{ ctx.current.outputs['generated_material_card_json']|to_ctx('generated_material_card') }}"
+      - "{{ ctx.current.outputs['generated_material_card_json']|to_ctx('AluminiumMaterialCard_aiida_datanode') }}"
 
   - workflow: execflow.oteapipipeline
     inputs:
@@ -48,11 +48,11 @@ steps:
         $ref: file:__DIR__/../2_ontoconv/generated_pipeline_2.yaml
       run_pipeline: pipe
       to_cuds:
-        - generated_material_card # this name is defined in the documentation.
+        - AluminiumMaterialCard_aiida_datanode
       from_cuds:
         - AluminiumMaterialCard_function_5_file
         - AbaqusConfiguration_function_4_file
-      generated_material_card: "{{ ctx.generated_material_card }}"
+      AluminiumMaterialCard_aiida_datanode: "{{ ctx.AluminiumMaterialCard_aiida_datanode }}"
 
     postprocess:
       - "{{ ctx.current.outputs.results['AluminiumMaterialCard_function_5_file']|to_ctx('ctx_material_file') }}"
@@ -76,3 +76,14 @@ steps:
     postprocess:
       # how do we know the identifier of the output?
       - "{{ ctx.current.outputs['CementOutput_json']|to_ctx('cement_output') }}"
+
+  - workflow: execflow.oteapipipeline
+    inputs:
+      pipeline:
+        $ref: file:__DIR__/../2_ontoconv/generated_pipeline_1.yaml
+      run_pipeline: pipe
+      to_cuds:
+        - AbaqusDeformationHistory_aiida_datanode
+      from_cuds:
+        - cement_output_instance
+      AbaqusDeformationHistory_aiida_datanode: "{{ ctx.cement_output }}"
