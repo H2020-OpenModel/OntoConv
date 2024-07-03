@@ -3,7 +3,6 @@
 @prefix oip: <http://open-model.eu/ontologies/oip#> .
 @prefix oteio: <https://w3id.org/emmo/domain/oteio#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix ss3: <http://open-model.eu/ontologies/ss3#> .
 @prefix ss3kb: <http://open-model.eu/ontologies/ss3kb#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
@@ -24,18 +23,21 @@
 
 <E> a oteio:DataSink .
 
-<H> a oteio:DataSource .
+<H> a oteio:DataSink,
+        oteio:DataSource .
 
 <M> a oteio:DataSink,
         oteio:DataSource .
 
 <P> a oteio:DataSink .
 
-<S> a oteio:DataSink .
+<S> a oteio:DataSink,
+        oteio:DataSource .
 
 <T> a oteio:DataSink .
 
-<Y> a oteio:DataSink .
+<Y> a oteio:DataSink,
+        oteio:DataSource .
 
 <a> a oteio:DataSink,
         oteio:DataSource .
@@ -54,42 +56,124 @@
 <f> a oteio:DataSink,
         oteio:DataSource .
 
-<g> a oteio:DataSink .
+<g> a oteio:DataSink,
+        oteio:DataSource .
 
-<h> a oteio:DataSink .
+<h> a oteio:DataSink,
+        oteio:DataSource .
 
 ss3:AbaqusSimulation a oteio:Dictionary ;
+    oip:AiidaDataNode [ a oteio:Dictionary ;
+            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                            emmo:hasStringValue "ss3:AbaqusDeformationHistory"@en ] ;
+                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                            emmo:hasValue "http://onto-ns.com/meta/2.0/core.singlefile"^^xsd:string ] ] ] ;
     oip:AiidaPlugin "execwrapper"^^xsd:string ;
     oip:Command "run_abaqus.sh"^^xsd:string ;
     oip:Files [ a rdf:List ;
             rdf:first [ a oteio:Dictionary ;
                     oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                    emmo:hasStringValue "source_uri"@en ] ;
-                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                    emmo:hasValue "file://SS3_wrapper/cli/run_abaqus.sh"^^xsd:string ] ],
-                        [ a oteio:KeyValuePair ;
-                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                     emmo:hasStringValue "target_file"@en ] ;
                             oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                    emmo:hasValue "run_abaqus.sh"^^xsd:string ] ] ] ;
+                                    emmo:hasValue "run_abaqus.sh"^^xsd:string ] ],
+                        [ a oteio:KeyValuePair ;
+                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                    emmo:hasStringValue "source_uri"@en ] ;
+                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                    emmo:hasValue "file://SS3_wrapper/cli/run_abaqus.sh"^^xsd:string ] ] ] ;
             rdf:rest ( [ a oteio:Dictionary ;
                         oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                 oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                        emmo:hasStringValue "target_file"@en ] ;
-                                oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                        emmo:hasValue "expand_abaqusconf.py"^^xsd:string ] ],
-                            [ a oteio:KeyValuePair ;
-                                oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                         emmo:hasStringValue "source_uri"@en ] ;
                                 oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                        emmo:hasValue "file://SS3_wrapper/cli/expand_abaqusconf.py"^^xsd:string ] ] ] ) ] ;
+                                        emmo:hasValue "file://SS3_wrapper/cli/expand_abaqusconf.py"^^xsd:string ] ],
+                            [ a oteio:KeyValuePair ;
+                                oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                        emmo:hasStringValue "target_file"@en ] ;
+                                oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                        emmo:hasValue "expand_abaqusconf.py"^^xsd:string ] ] ] ) ] ;
     oip:InstallCommand """pip install git+ssh://git@github.com:H2020-OpenModel/SS3_wrappers.git@master
 """^^xsd:string ;
     oip:SimulationToolInput [ a oteio:Dictionary ;
             oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                             emmo:hasStringValue "ss3:AluminiumMaterialCard"@en ] ;
+                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                            emmo:hasValue [ a rdf:List ;
+                                    rdf:first [ a oteio:Dictionary ;
+                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                            emmo:hasStringValue "function"@en ] ;
+                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                            emmo:hasValue [ a oteio:Dictionary ;
+                                                                    oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                    emmo:hasStringValue "functionType"@en ] ;
+                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                    emmo:hasValue "application/vnd.dlite-generate"^^xsd:string ] ],
+                                                                        [ a oteio:KeyValuePair ;
+                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                    emmo:hasStringValue "configuration"@en ] ;
+                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                    emmo:hasValue [ a oteio:Dictionary ;
+                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/AluminiumMaterialCard"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "location"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "Section_materials.inp"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "driver"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "plugin_abaqus_material"^^xsd:string ] ] ] ] ] ] ] ] ] ;
+                                    rdf:rest () ] ] ],
+                [ a oteio:KeyValuePair ;
+                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                            emmo:hasStringValue "ss3:AbaqusConfiguration"@en ] ;
+                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                            emmo:hasValue [ a rdf:List ;
+                                    rdf:first [ a oteio:Dictionary ;
+                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                            emmo:hasStringValue "function"@en ] ;
+                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                            emmo:hasValue [ a oteio:Dictionary ;
+                                                                    oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                    emmo:hasStringValue "configuration"@en ] ;
+                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                    emmo:hasValue [ a oteio:Dictionary ;
+                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/AbaqusConfiguration"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "driver"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "json"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "location"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "abaqusconf.json"^^xsd:string ] ] ] ] ],
+                                                                        [ a oteio:KeyValuePair ;
+                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                    emmo:hasStringValue "functionType"@en ] ;
+                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                    emmo:hasValue "application/vnd.dlite-generate"^^xsd:string ] ] ] ] ] ] ;
+                                    rdf:rest () ] ] ],
+                [ a oteio:KeyValuePair ;
+                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                            emmo:hasStringValue "ss3:ConcreteMaterialCard"@en ] ;
                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                             emmo:hasValue [ a rdf:List ;
                                     rdf:first [ a oteio:Dictionary ;
@@ -117,24 +201,27 @@ ss3:AbaqusSimulation a oteio:Dictionary ;
                                                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                                             emmo:hasStringValue "datamodel"@en ] ;
                                                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/AluminiumMaterialCard"^^xsd:string ] ] ] ] ],
+                                                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/ConcreteMaterialCard"^^xsd:string ] ] ] ] ],
                                                                         [ a oteio:KeyValuePair ;
                                                                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                     emmo:hasStringValue "functionType"@en ] ;
                                                                             oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                                                                                     emmo:hasValue "application/vnd.dlite-generate"^^xsd:string ] ] ] ] ] ] ;
-                                    rdf:rest () ] ] ],
-                [ a oteio:KeyValuePair ;
+                                    rdf:rest () ] ] ] ] ;
+    oip:SimulationToolOutput [ a oteio:Dictionary ;
+            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                            emmo:hasStringValue "ss3:AbaqusConfiguration"@en ] ;
+                            emmo:hasStringValue "ss3:AbaqusDeformationHistory"@en ] ;
                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                             emmo:hasValue [ a rdf:List ;
                                     rdf:first [ a oteio:Dictionary ;
                                             oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                            emmo:hasStringValue "function"@en ] ;
+                                                            emmo:hasStringValue "dataresource"@en ] ;
                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                                                             emmo:hasValue [ a oteio:Dictionary ;
+                                                                    dcat:downloadUrl "abaqus_deformation_history.txt"^^xsd:string ;
+                                                                    dcat:mediaType "application/vnd.dlite-parse"^^xsd:string ;
                                                                     oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                                                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                     emmo:hasStringValue "configuration"@en ] ;
@@ -144,26 +231,29 @@ ss3:AbaqusSimulation a oteio:Dictionary ;
                                                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                                             emmo:hasStringValue "driver"@en ] ;
                                                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "json"^^xsd:string ] ],
-                                                                                                [ a oteio:KeyValuePair ;
-                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "location"@en ] ;
-                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "abaqusconf.json"^^xsd:string ] ],
+                                                                                                            emmo:hasValue "plugin_abaqus_output"^^xsd:string ] ],
                                                                                                 [ a oteio:KeyValuePair ;
                                                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                                             emmo:hasStringValue "datamodel"@en ] ;
                                                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/AbaqusConfiguration"^^xsd:string ] ] ] ] ],
-                                                                        [ a oteio:KeyValuePair ;
-                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                    emmo:hasStringValue "functionType"@en ] ;
-                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                    emmo:hasValue "application/vnd.dlite-generate"^^xsd:string ] ] ] ] ] ] ;
-                                    rdf:rest () ] ] ],
-                [ a oteio:KeyValuePair ;
+                                                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/AbaqusDeformationHistory"^^xsd:string ] ] ] ] ] ] ] ] ] ;
+                                    rdf:rest () ] ] ] ] .
+
+ss3:MaterialCardGenerator a oteio:Dictionary ;
+    oip:AiidaDataNode [ a oteio:Dictionary ;
+            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                            emmo:hasStringValue "ss3:ConcreteMaterialCard"@en ] ;
+                            emmo:hasStringValue "ss3:AluminiumMaterialCard"@en ] ;
+                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                            emmo:hasValue "http://onto-ns.com/meta/2.0/core.singlefile"^^xsd:string ] ] ] ;
+    oip:AiidaPlugin "execwrapper"^^xsd:string ;
+    oip:Command "\\ python -m ss3_wrappers.material_card_generator \\ --infile={yieldstressfile} \\ --template-file={templatefile} \\ generated_material_card.card"^^xsd:string ;
+    oip:InstallCommand """pip install git+ssh://git@github.com:H2020-OpenModel/SS3_wrappers.git@master
+"""^^xsd:string ;
+    oip:SimulationToolInput [ a oteio:Dictionary ;
+            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                            emmo:hasStringValue "ss3:YieldStrength"@en ] ;
                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                             emmo:hasValue [ a rdf:List ;
                                     rdf:first [ a oteio:Dictionary ;
@@ -184,122 +274,19 @@ ss3:AbaqusSimulation a oteio:Dictionary ;
                                                                                     emmo:hasValue [ a oteio:Dictionary ;
                                                                                             oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "driver"@en ] ;
-                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "plugin_abaqus_material"^^xsd:string ] ],
-                                                                                                [ a oteio:KeyValuePair ;
-                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
-                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/ConcreteMaterialCard"^^xsd:string ] ],
-                                                                                                [ a oteio:KeyValuePair ;
-                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                                             emmo:hasStringValue "location"@en ] ;
                                                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "Section_materials.inp"^^xsd:string ] ] ] ] ] ] ] ] ] ;
-                                    rdf:rest () ] ] ] ] ;
-    oip:SimulationToolOutput [ a oteio:Dictionary ;
-            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                            emmo:hasStringValue "ss3:AbaqusDeformationHistory"@en ] ;
-                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                            emmo:hasValue [ a rdf:List ;
-                                    rdf:first [ a oteio:Dictionary ;
-                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                            emmo:hasStringValue "function"@en ] ;
-                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                            emmo:hasValue [ a oteio:Dictionary ;
-                                                                    oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                    emmo:hasStringValue "functionType"@en ] ;
-                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                    emmo:hasValue "application/vnd.dlite-convert"^^xsd:string ] ],
-                                                                        [ a oteio:KeyValuePair ;
-                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                    emmo:hasStringValue "configuration"@en ] ;
-                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                    emmo:hasValue [ a oteio:Dictionary ;
-                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "inputs"@en ] ;
-                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue [ a rdf:List ;
-                                                                                                                    rdf:first [ a oteio:Dictionary ;
-                                                                                                                            rdfs:label "cement_output"^^xsd:string ;
-                                                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
-                                                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                                                            emmo:hasValue "http://onto-ns.com/meta/2.0/core.singlefile"^^xsd:string ] ] ] ;
-                                                                                                                    rdf:rest () ] ] ],
+                                                                                                            emmo:hasValue "yieldstress-input.txt"^^xsd:string ] ],
                                                                                                 [ a oteio:KeyValuePair ;
-                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "function_name"@en ] ;
-                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "abaqus_converter"^^xsd:string ] ],
-                                                                                                [ a oteio:KeyValuePair ;
-                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "module_name"@en ] ;
-                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "ss3_wrappers.abaqus_convert"^^xsd:string ] ],
-                                                                                                [ a oteio:KeyValuePair ;
-                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "outputs"@en ] ;
-                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue [ a rdf:List ;
-                                                                                                                    rdf:first [ a oteio:Dictionary ;
-                                                                                                                            rdfs:label "cement_output_instance"^^xsd:string ;
-                                                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
-                                                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/AbaqusDeformationHistory"^^xsd:string ] ] ] ;
-                                                                                                                    rdf:rest () ] ] ] ] ] ] ] ] ] ] ;
-                                    rdf:rest () ] ] ] ] .
-
-ss3:MaterialCardGenerator a oteio:Dictionary ;
-    oip:AiidaPlugin "execwrapper"^^xsd:string ;
-    oip:Command "\\ python -m ss3_wrappers.material_card_generator \\ --infile={yieldstressfile} \\ --template-file={templatefile} \\ generated_material_card.card"^^xsd:string ;
-    oip:InstallCommand """pip install git+ssh://git@github.com:H2020-OpenModel/SS3_wrappers.git@master
-"""^^xsd:string ;
-    oip:SimulationToolInput [ a oteio:Dictionary ;
-            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                            emmo:hasStringValue "ss3:YieldStrength"@en ] ;
-                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                            emmo:hasValue [ a rdf:List ;
-                                    rdf:first [ a oteio:Dictionary ;
-                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                            emmo:hasStringValue "function"@en ] ;
-                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                            emmo:hasValue [ a oteio:Dictionary ;
-                                                                    oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                    emmo:hasStringValue "configuration"@en ] ;
-                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                    emmo:hasValue [ a oteio:Dictionary ;
-                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                                             emmo:hasStringValue "driver"@en ] ;
                                                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                                                                                                             emmo:hasValue "yieldstress"^^xsd:string ] ],
                                                                                                 [ a oteio:KeyValuePair ;
                                                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "location"@en ] ;
-                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "yieldstress-input.txt"^^xsd:string ] ],
-                                                                                                [ a oteio:KeyValuePair ;
-                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                                             emmo:hasStringValue "datamodel"@en ] ;
                                                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/YieldStress"^^xsd:string ] ] ] ] ],
-                                                                        [ a oteio:KeyValuePair ;
-                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                    emmo:hasStringValue "functionType"@en ] ;
-                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                    emmo:hasValue "application/vnd.dlite-generate"^^xsd:string ] ] ] ] ] ] ;
+                                                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/YieldStress"^^xsd:string ] ] ] ] ] ] ] ] ] ;
                                     rdf:rest () ] ] ],
                 [ a oteio:KeyValuePair ;
                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
@@ -324,14 +311,14 @@ ss3:MaterialCardGenerator a oteio:Dictionary ;
                                                                                                             emmo:hasValue "json"^^xsd:string ] ],
                                                                                                 [ a oteio:KeyValuePair ;
                                                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
-                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/TabulatedElastoPlastic"^^xsd:string ] ],
-                                                                                                [ a oteio:KeyValuePair ;
-                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                                             emmo:hasStringValue "location"@en ] ;
                                                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "tabulated_elastoplastic.json"^^xsd:string ] ] ] ] ],
+                                                                                                            emmo:hasValue "tabulated_elastoplastic.json"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/TabulatedElastoPlastic"^^xsd:string ] ] ] ] ],
                                                                         [ a oteio:KeyValuePair ;
                                                                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                     emmo:hasStringValue "functionType"@en ] ;
@@ -347,6 +334,79 @@ ss3:MaterialCardGenerator a oteio:Dictionary ;
                                     rdf:first [ a oteio:Dictionary ;
                                             oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                            emmo:hasStringValue "dataresource"@en ] ;
+                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                            emmo:hasValue [ a oteio:Dictionary ;
+                                                                    dcat:downloadUrl "aluminium_material_card.json"^^xsd:string ;
+                                                                    dcat:mediaType "application/vnd.dlite-parse"^^xsd:string ;
+                                                                    oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                    emmo:hasStringValue "configuration"@en ] ;
+                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                    emmo:hasValue [ a oteio:Dictionary ;
+                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/AluminiumMaterialCard"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "driver"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "json"^^xsd:string ] ] ] ] ] ] ] ] ] ;
+                                    rdf:rest () ] ] ] ] .
+
+ss3:NaMoSimulation a oteio:Dictionary ;
+    oip:AiidaPlugin "execwrapper"^^xsd:string ;
+    oip:Command "namo"^^xsd:string ;
+    oip:InstallCommand """pip install git+ssh://git@github.com:H2020-OpenModel/SS3_wrappers.git@master
+"""^^xsd:string ;
+    oip:SimulationToolInput [ a oteio:Dictionary ;
+            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                            emmo:hasStringValue "ss3:HeatTreatment"@en ] ;
+                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                            emmo:hasValue [ a rdf:List ;
+                                    rdf:first [ a oteio:Dictionary ;
+                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                            emmo:hasStringValue "function"@en ] ;
+                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                            emmo:hasValue [ a oteio:Dictionary ;
+                                                                    oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                    emmo:hasStringValue "functionType"@en ] ;
+                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                    emmo:hasValue "application/vnd.dlite-generate"^^xsd:string ] ],
+                                                                        [ a oteio:KeyValuePair ;
+                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                    emmo:hasStringValue "configuration"@en ] ;
+                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                    emmo:hasValue [ a oteio:Dictionary ;
+                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "location"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "heat_treatment.csv"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/HeatTreatment"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "driver"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "heat_treatment"^^xsd:string ] ] ] ] ] ] ] ] ] ;
+                                    rdf:rest () ] ] ],
+                [ a oteio:KeyValuePair ;
+                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                            emmo:hasStringValue "ss3:EffectiveAlloyComposition"@en ] ;
+                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                            emmo:hasValue [ a rdf:List ;
+                                    rdf:first [ a oteio:Dictionary ;
+                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                             emmo:hasStringValue "function"@en ] ;
                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                                                             emmo:hasValue [ a oteio:Dictionary ;
@@ -357,45 +417,67 @@ ss3:MaterialCardGenerator a oteio:Dictionary ;
                                                                                     emmo:hasValue [ a oteio:Dictionary ;
                                                                                             oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "function_name"@en ] ;
+                                                                                                            emmo:hasStringValue "location"@en ] ;
                                                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "singlefile_converter"^^xsd:string ] ],
+                                                                                                            emmo:hasValue "alloy_composition.csv"^^xsd:string ] ],
                                                                                                 [ a oteio:KeyValuePair ;
                                                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "outputs"@en ] ;
+                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
                                                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue [ a rdf:List ;
-                                                                                                                    rdf:first [ a oteio:Dictionary ;
-                                                                                                                            rdfs:label "materialinst"^^xsd:string ;
-                                                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
-                                                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/AluminiumMaterialCard"^^xsd:string ] ] ] ;
-                                                                                                                    rdf:rest () ] ] ],
+                                                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/AlloyComposition"^^xsd:string ] ],
                                                                                                 [ a oteio:KeyValuePair ;
                                                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "module_name"@en ] ;
+                                                                                                            emmo:hasStringValue "driver"@en ] ;
                                                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue "ss3_wrappers.singlefile_converter"^^xsd:string ] ],
-                                                                                                [ a oteio:KeyValuePair ;
-                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                            emmo:hasStringValue "inputs"@en ] ;
-                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                            emmo:hasValue [ a rdf:List ;
-                                                                                                                    rdf:first [ a oteio:Dictionary ;
-                                                                                                                            rdfs:label "generated_material_card"^^xsd:string ;
-                                                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
-                                                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                                                                            emmo:hasValue "http://onto-ns.com/meta/2.0/core.singlefile"^^xsd:string ] ] ] ;
-                                                                                                                    rdf:rest () ] ] ] ] ] ],
+                                                                                                            emmo:hasValue "alloy_composition"^^xsd:string ] ] ] ] ],
                                                                         [ a oteio:KeyValuePair ;
                                                                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                                     emmo:hasStringValue "functionType"@en ] ;
                                                                             oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                                    emmo:hasValue "application/vnd.dlite-convert"^^xsd:string ] ] ] ] ] ] ;
+                                                                                    emmo:hasValue "application/vnd.dlite-generate"^^xsd:string ] ] ] ] ] ] ;
+                                    rdf:rest () ] ] ] ] ;
+    oip:SimulationToolOutput [ a oteio:Dictionary ;
+            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                            emmo:hasStringValue "ss3:YieldStrength"@en ] ;
+                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                            emmo:hasValue [ a rdf:List ;
+                                    rdf:first [ a oteio:Dictionary ;
+                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                            emmo:hasStringValue "function"@en ] ;
+                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                            emmo:hasValue [ a oteio:Dictionary ;
+                                                                    oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                    emmo:hasStringValue "configuration"@en ] ;
+                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                    emmo:hasValue [ a oteio:Dictionary ;
+                                                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "options"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "dialect=excel;mode=w"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "location"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "yieldstress.txt"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "driver"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "yieldstress"^^xsd:string ] ],
+                                                                                                [ a oteio:KeyValuePair ;
+                                                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                                            emmo:hasStringValue "datamodel"@en ] ;
+                                                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/YieldStress"^^xsd:string ] ] ] ] ],
+                                                                        [ a oteio:KeyValuePair ;
+                                                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                                    emmo:hasStringValue "functionType"@en ] ;
+                                                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                                    emmo:hasValue "application/vnd.dlite-parse"^^xsd:string ] ] ] ] ] ] ;
                                     rdf:rest () ] ] ] ] .
 
 ss3kb:abaqus_config1 a ss3:AbaqusConfiguration,
@@ -411,10 +493,14 @@ ss3kb:abaqus_config1 a ss3:AbaqusConfiguration,
                                     dcat:mediaType "application/vnd.dlite-parse"^^xsd:string ;
                                     oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                    emmo:hasStringValue "type"@en ] ;
+                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                    emmo:hasValue "ss3:AbaqusConfiguration"^^xsd:string ] ],
+                                        [ a oteio:KeyValuePair ;
+                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                     emmo:hasStringValue "configuration"@en ] ;
                                             oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                                                     emmo:hasValue [ a oteio:Dictionary ;
-                                                            rdfs:label "abaqus_config"^^xsd:string ;
                                                             oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                             emmo:hasStringValue "options"@en ] ;
@@ -422,19 +508,14 @@ ss3kb:abaqus_config1 a ss3:AbaqusConfiguration,
                                                                             emmo:hasValue "inputfile=CementModel_Final_contact.inp;ppfile=OpenODB7.py"^^xsd:string ] ],
                                                                 [ a oteio:KeyValuePair ;
                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                            emmo:hasStringValue "metadata"@en ] ;
-                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/AbaqusConfiguration"^^xsd:string ] ],
-                                                                [ a oteio:KeyValuePair ;
-                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                             emmo:hasStringValue "driver"@en ] ;
                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                            emmo:hasValue "abaqus_configuration"^^xsd:string ] ] ] ] ],
-                                        [ a oteio:KeyValuePair ;
-                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                    emmo:hasStringValue "type"@en ] ;
-                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                    emmo:hasValue "ss3:AbaqusConfiguration"^^xsd:string ] ] ] ] ] ] ;
+                                                                            emmo:hasValue "abaqus_configuration"^^xsd:string ] ],
+                                                                [ a oteio:KeyValuePair ;
+                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                            emmo:hasStringValue "metadata"@en ] ;
+                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/AbaqusConfiguration"^^xsd:string ] ] ] ] ] ] ] ] ] ;
     rdf:rest () .
 
 ss3kb:abaqus_materialcard_al1 a ss3:AluminiumMaterialCard,
@@ -450,25 +531,24 @@ ss3kb:abaqus_materialcard_al1 a ss3:AluminiumMaterialCard,
                                     dcat:mediaType "application/vnd.dlite-parse"^^xsd:string ;
                                     oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                    emmo:hasStringValue "type"@en ] ;
-                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                    emmo:hasValue "ss3:AluminiumMaterialCard"^^xsd:string ] ],
-                                        [ a oteio:KeyValuePair ;
-                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                     emmo:hasStringValue "configuration"@en ] ;
                                             oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                                                     emmo:hasValue [ a oteio:Dictionary ;
-                                                            rdfs:label "materialcard_al"^^xsd:string ;
                                                             oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                            emmo:hasStringValue "driver"@en ] ;
-                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                            emmo:hasValue "json"^^xsd:string ] ],
-                                                                [ a oteio:KeyValuePair ;
                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                             emmo:hasStringValue "metadata"@en ] ;
                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/AluminiumMaterialCard"^^xsd:string ] ] ] ] ] ] ] ] ] ;
+                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/AluminiumMaterialCard"^^xsd:string ] ],
+                                                                [ a oteio:KeyValuePair ;
+                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                            emmo:hasStringValue "driver"@en ] ;
+                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                            emmo:hasValue "json"^^xsd:string ] ] ] ] ],
+                                        [ a oteio:KeyValuePair ;
+                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                    emmo:hasStringValue "type"@en ] ;
+                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                    emmo:hasValue "ss3:AluminiumMaterialCard"^^xsd:string ] ] ] ] ] ] ;
     rdf:rest () .
 
 ss3kb:abaqus_materialcard_concrete1 a ss3:ConcreteMaterialCard,
@@ -484,25 +564,100 @@ ss3kb:abaqus_materialcard_concrete1 a ss3:ConcreteMaterialCard,
                                     dcat:mediaType "application/vnd.dlite-parse"^^xsd:string ;
                                     oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                    emmo:hasStringValue "configuration"@en ] ;
+                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                    emmo:hasValue [ a oteio:Dictionary ;
+                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                            emmo:hasStringValue "metadata"@en ] ;
+                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/ConcreteMaterialCard"^^xsd:string ] ],
+                                                                [ a oteio:KeyValuePair ;
+                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                            emmo:hasStringValue "driver"@en ] ;
+                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                            emmo:hasValue "json"^^xsd:string ] ] ] ] ],
+                                        [ a oteio:KeyValuePair ;
+                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                     emmo:hasStringValue "type"@en ] ;
                                             oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                    emmo:hasValue "ss3:ConcreteMaterialCard"^^xsd:string ] ],
+                                                    emmo:hasValue "ss3:ConcreteMaterialCard"^^xsd:string ] ] ] ] ] ] ;
+    rdf:rest () .
+
+ss3kb:alloy_composition1 a ss3:EffectiveAlloyComposition,
+        rdf:List,
+        oteio:DataSource ;
+    rdf:first [ a oteio:Dictionary ;
+            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                            emmo:hasStringValue "dataresource"@en ] ;
+                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                            emmo:hasValue [ a oteio:Dictionary ;
+                                    dcat:downloadUrl "file://tests/testfiles/input_data/alloy_composition.csv"^^xsd:string ;
+                                    dcat:mediaType "application/vnd.dlite-parse"^^xsd:string ;
+                                    oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                    emmo:hasStringValue "configuration"@en ] ;
+                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                    emmo:hasValue [ a oteio:Dictionary ;
+                                                            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                            emmo:hasStringValue "driver"@en ] ;
+                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                            emmo:hasValue "alloy_composition"^^xsd:string ] ],
+                                                                [ a oteio:KeyValuePair ;
+                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                            emmo:hasStringValue "options"@en ] ;
+                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                            emmo:hasValue "dialect=excel"^^xsd:string ] ],
+                                                                [ a oteio:KeyValuePair ;
+                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                            emmo:hasStringValue "metadata"@en ] ;
+                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/AlloyComposition"^^xsd:string ] ] ] ] ],
+                                        [ a oteio:KeyValuePair ;
+                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                    emmo:hasStringValue "type"@en ] ;
+                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                    emmo:hasValue "ss3:EffectiveAlloyComposition"^^xsd:string ] ] ] ] ] ] ;
+    rdf:rest () .
+
+ss3kb:alloy_heat_treatment1 a ss3:HeatTreatment,
+        rdf:List,
+        oteio:DataSource ;
+    rdf:first [ a oteio:Dictionary ;
+            oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                            emmo:hasStringValue "dataresource"@en ] ;
+                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                            emmo:hasValue [ a oteio:Dictionary ;
+                                    dcat:downloadUrl "file://tests/testfiles/input_data/heat_treatment.csv"^^xsd:string ;
+                                    dcat:mediaType "application/vnd.dlite-parse"^^xsd:string ;
+                                    oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
+                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                    emmo:hasStringValue "type"@en ] ;
+                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                    emmo:hasValue "ss3:HeatTreatment"^^xsd:string ] ],
                                         [ a oteio:KeyValuePair ;
                                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                     emmo:hasStringValue "configuration"@en ] ;
                                             oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                                                     emmo:hasValue [ a oteio:Dictionary ;
-                                                            rdfs:label "materialcard_concrete"^^xsd:string ;
                                                             oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                             emmo:hasStringValue "driver"@en ] ;
                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                            emmo:hasValue "json"^^xsd:string ] ],
+                                                                            emmo:hasValue "heat_treatment"^^xsd:string ] ],
                                                                 [ a oteio:KeyValuePair ;
                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                             emmo:hasStringValue "metadata"@en ] ;
                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/ConcreteMaterialCard"^^xsd:string ] ] ] ] ] ] ] ] ] ;
+                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/HeatTreatment"^^xsd:string ] ],
+                                                                [ a oteio:KeyValuePair ;
+                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                            emmo:hasStringValue "options"@en ] ;
+                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                            emmo:hasValue "dialect=excel"^^xsd:string ] ] ] ] ] ] ] ] ] ;
     rdf:rest () .
 
 ss3kb:tabulated_elastoplastic1 a ss3:TabulatedElastoPlastic,
@@ -518,10 +673,14 @@ ss3kb:tabulated_elastoplastic1 a ss3:TabulatedElastoPlastic,
                                     dcat:mediaType "application/vnd.dlite-parse"^^xsd:string ;
                                     oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                    emmo:hasStringValue "type"@en ] ;
+                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                    emmo:hasValue "ss3:TabulatedElastoPlastic"^^xsd:string ] ],
+                                        [ a oteio:KeyValuePair ;
+                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                     emmo:hasStringValue "configuration"@en ] ;
                                             oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                                                     emmo:hasValue [ a oteio:Dictionary ;
-                                                            rdfs:label "tabulated_elastoplastic"^^xsd:string ;
                                                             oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                             emmo:hasStringValue "driver"@en ] ;
@@ -531,12 +690,7 @@ ss3kb:tabulated_elastoplastic1 a ss3:TabulatedElastoPlastic,
                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                             emmo:hasStringValue "metadata"@en ] ;
                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/TabulatedElastoPlastic"^^xsd:string ] ] ] ] ],
-                                        [ a oteio:KeyValuePair ;
-                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                    emmo:hasStringValue "type"@en ] ;
-                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                    emmo:hasValue "ss3:TabulatedElastoPlastic"^^xsd:string ] ] ] ] ] ] ;
+                                                                            emmo:hasValue "http://www.sintef.no/calm/0.1/TabulatedElastoPlastic"^^xsd:string ] ] ] ] ] ] ] ] ] ;
     rdf:rest () .
 
 ss3kb:yieldstrength1 a ss3:YieldStrength,
@@ -552,25 +706,24 @@ ss3kb:yieldstrength1 a ss3:YieldStrength,
                                     dcat:mediaType "application/vnd.dlite-parse"^^xsd:string ;
                                     oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
                                             oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                    emmo:hasStringValue "type"@en ] ;
+                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                    emmo:hasValue "ss3:YieldStrength"^^xsd:string ] ],
+                                        [ a oteio:KeyValuePair ;
+                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                     emmo:hasStringValue "configuration"@en ] ;
                                             oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
                                                     emmo:hasValue [ a oteio:Dictionary ;
-                                                            rdfs:label "yieldstressdata"^^xsd:string ;
                                                             oteio:hasKeyValuePair [ a oteio:KeyValuePair ;
-                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                                            emmo:hasStringValue "metadata"@en ] ;
-                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/YieldStress"^^xsd:string ] ],
-                                                                [ a oteio:KeyValuePair ;
                                                                     oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
                                                                             emmo:hasStringValue "driver"@en ] ;
                                                                     oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                                            emmo:hasValue "yieldstress"^^xsd:string ] ] ] ] ],
-                                        [ a oteio:KeyValuePair ;
-                                            oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
-                                                    emmo:hasStringValue "type"@en ] ;
-                                            oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
-                                                    emmo:hasValue "ss3:YieldStrength"^^xsd:string ] ] ] ] ] ] ;
+                                                                            emmo:hasValue "yieldstress"^^xsd:string ] ],
+                                                                [ a oteio:KeyValuePair ;
+                                                                    oteio:hasDictionaryKey [ a oteio:DictionaryKey ;
+                                                                            emmo:hasStringValue "metadata"@en ] ;
+                                                                    oteio:hasDictionaryValue [ a oteio:DictionaryValue ;
+                                                                            emmo:hasValue "http://onto-ns.com/meta/calm/0.1/YieldStress"^^xsd:string ] ] ] ] ] ] ] ] ] ;
     rdf:rest () .
 
 <i> a oteio:DataSink,
@@ -588,6 +741,8 @@ ss3kb:yieldstrength1 a ss3:YieldStrength,
 <o> a oteio:DataSink,
         oteio:DataSource .
 
+<p> a oteio:DataSink .
+
 <q> a oteio:DataSink,
         oteio:DataSource .
 
@@ -603,4 +758,7 @@ ss3kb:yieldstrength1 a ss3:YieldStrength,
 <u> a oteio:DataSink,
         oteio:DataSource .
 
-<y> a oteio:DataSource .
+<v> a oteio:DataSink .
+
+<y> a oteio:DataSink,
+        oteio:DataSource .
