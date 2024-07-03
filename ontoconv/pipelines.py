@@ -240,9 +240,13 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
     lst.extend([("input", s) for s in resources.get("sinks", [])])
     i = 1
 
+    # If there are no sinks, we have now reached the final output
+    # that was given as target in OntoFlow. This final output
+    # should be saved somewhere with corresponding documentation.
     save_final_output = False
     if resources["sinks"] == []:
         save_final_output = True
+
     for dtype, dct in lst:
         iri = dct["iri"]
         resourcetype = dct["resourcetype"]
@@ -270,7 +274,7 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                     ) from exc
             if dtype == "input":
                 resource = resource_info
-            else:
+            elif dtype == "output":
                 try:
                     datanodetype = r["aiida_datanodes"][iri]
                 except KeyError:
@@ -280,6 +284,11 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                         raise KeyError(
                             f"Could not find {iri} in {r['aiida_datanodes']}"
                         ) from exc
+
+                # For now, we create a pipeline that saves the content of the
+                # singlefile data node in the current directory.
+                # This is a temporary solution until we have a better way to
+                # determine where to save the data and its documentation.
                 if save_final_output:
                     resource = [
                         {
@@ -332,6 +341,11 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                             }
                         }
                     ]
+            else:
+                raise ValueError(
+                    f"Unknown resource type: {dtype}, only 'input'"
+                    "and 'output' are allowed."
+                )
 
         for strategy in resource:
             for stype, conf in strategy.items():
