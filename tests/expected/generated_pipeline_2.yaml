@@ -11,7 +11,7 @@ strategies:
 - functionType: application/vnd.dlite-convert
   configuration:
     function_name: singlefile_converter
-    module_name: ss3_wrappers.singlefile_converter
+    module_name: execflow.data.singlefile_converter
     inputs:
     - label: AluminiumMaterialCard_aiida_datanode
       datamodel: http://onto-ns.com/meta/2.0/core.singlefile

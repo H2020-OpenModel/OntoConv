@@ -121,13 +121,10 @@ def test_generate_execflow_pipeline():
         for strategy in data["strategies"]
         if strategy.get("function") == "AbaqusDeformationHistory_function_1"
     )
-    print("  - - - -  --")
-    print(strat)
-    print("                     ")
     assert strat == {
         "configuration": {
             "function_name": "singlefile_converter",
-            "module_name": "ss3_wrappers.singlefile_converter",
+            "module_name": "execflow.data.singlefile_converter",
             "inputs": [
                 {
                     "label": "AbaqusDeformationHistory_aiida_datanode",
