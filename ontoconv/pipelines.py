@@ -316,7 +316,7 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                                 "vnd.dlite-convert",
                                 "configuration": {
                                     "function_name": "singlefile_converter",
-                                    "module_name": "ss3_wrappers."
+                                    "module_name": "execflow.data."
                                     "singlefile_converter",
                                     "inputs": [
                                         {
