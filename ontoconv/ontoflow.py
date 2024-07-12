@@ -108,6 +108,9 @@ def parse_ontoflow(workflow_data, kb, outdir="."):
             to_cuds = [ni.var_name("output") for ni in n.inputs if ni.is_ctx_node()]
             if len(to_cuds) != 0:
                 inputs["to_cuds"] = to_cuds
+                for output in to_cuds:
+                    var = "ctx." + output
+                    inputs[output] = f"{{{{ ctx.{output} }}}}"
 
             chain["steps"].append({"workflow": "execflow.oteapipipeline",
                                    "inputs": inputs,
@@ -125,8 +128,7 @@ def parse_ontoflow(workflow_data, kb, outdir="."):
                         "filename": static_file["target_file"],
                         "template": static_file["source_uri"]
                     }
-
-            output_filenames=[{f"file_{i}": "missing_filename_{f.iri}.json"} for (i, f) in enumerate(n.outputs)]
+            output_filenames=[{f"file_{i}": f"{resource['output'][o][0]['dataresource']['downloadUrl']}"} for (i, o) in enumerate(resource["output"])]
             chain["steps"].append({"workflow": resource["aiida_plugin"],
                                    "inputs": {
                                        "command": resource["command"],
@@ -140,14 +142,17 @@ def parse_ontoflow(workflow_data, kb, outdir="."):
             last_outputs = n.outputs
     if last_outputs is not None:
         pipeline = generate_ontoflow_pipeline(kb, last_outputs, True)
+        inputs = {"pipeline": f"generated_pipeline_final_result.yaml",
+                  "run_pipeline": "pipe"}
         to_cuds = [ni.var_name("output") for ni in last_outputs if ni.is_ctx_node()]
+        if len(to_cuds) != 0:
+            inputs["to_cuds"] = to_cuds
+            for output in to_cuds:
+                var = "ctx." + output
+                inputs[output] = f"{{{{ ctx.{output} }}}}"
         save_pipeline("generated_pipeline_final_result.yaml", pipeline, outdir)
         chain["steps"].append({"workflow": "execflow.oteapipipeline",
-                               "inputs": {
-                                   "pipeline": f"generated_pipeline_final_result.yaml",
-                                   "run_pipeline": "pipe",
-                                   "to_cuds": to_cuds,
-                               },
+                               "inputs": inputs,
                                })
 
             

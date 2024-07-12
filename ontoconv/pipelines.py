@@ -19,6 +19,7 @@ RECOGNISED_KEYS = BASIC_RECOGNISED_KEYS.copy()
 RECOGNISED_KEYS.update(
     {
         "aiida_plugin": "http://open-model.eu/ontologies/oip#AiidaPlugin",
+        "aiida_datanodes": "http://open-model.eu/ontologies/oip#AiidaDataNode",
         "command": "http://open-model.eu/ontologies/oip#Command",
         "files": "http://open-model.eu/ontologies/oip#Files",
         "input": "http://open-model.eu/ontologies/oip#SimulationToolInput",
@@ -252,58 +253,114 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
     strategies = []
     i = 0
 
+    def add_resource(resource, dtype):
+        for strategy in resource:
+            for stype, conf in strategy.items():
+                name = n.var_name(dtype)
+                conf[stype] = name
+                nonlocal i
+                i += 1
+                names[dtype].append(name)
+                strategies.append(conf)
+
     for n in nodes:
         iri = n.iri
-        for dtype in ["input", "output"]:
-            resource_type = n.resource_type[dtype]
-            if resource_type == "":
-                continue;
+        if n.resource_type["input"] != "":
+            resource_type = n.resource_type["input"]
 
             if resource_type == "dataset":
+                add_resource(load_container(ts, iri, recognised_keys=recognised_keys))
+            else:
+                r = load_simulation_resource(ts, resource_type)
+                try:
+                    add_resource(r["input"][iri], "input")
+                except KeyError:
+                    try:
+                        add_resource(r["input"][ts.prefix_iri(iri)], "input")
+                    except KeyError as exc:
+                        raise KeyError(
+                            f"Could not find input {iri} in {resource_type}"
+                        ) from exc
+        if n.resource_type["output"] != "":
+            resource_type = n.resource_type["output"]
+            # r = load_simulation_resource(ts, resource_type.rsplit(":", 1)[-1])
+            r = load_simulation_resource(ts, resource_type)
+            try:
+                resource_info = r["output"][iri]
+            except KeyError:
+                try:
+                    resource_info = r["output"][ts.prefix_iri(iri)]
+                except KeyError as exc:
+                    raise KeyError(
+                        f"Could not find output {iri} in {resource_type}"
+                    ) from exc
+            if n.resource_type["output"] == "dataset":
                 if save_final_output:
                     warnings.warn(
                         "There is no sink, therefor it does not make sense to "
                         "create a pipeline with an already existing dataset as "
                         "source."
                     )
-                resource = load_container(ts, iri, recognised_keys=recognised_keys)
+                add_resource(load_container(ts, iri, recognised_keys=recognised_keys), "output")
+            elif save_final_output:
+                add_resource([
+                    {
+                        "function": {
+                            "functionType": "application/"
+                            "vnd.dlite-generate",
+                            "configuration": {
+                                "datamodel": "http://onto-ns.com/"
+                                "meta/0.1/Blob",
+                                "driver": "blob",
+                                "label": f"{n.var_name('output')}",
+                                "location": resource_info[0][
+                                    "dataresource"
+                                ]["downloadUrl"],
+                            },
+                        },
+                    }
+                ], "output")
             else:
-                r = load_simulation_resource(ts, resource_type)
                 try:
-                    resource = r[dtype][iri]
+                    datanodetype = r["aiida_datanodes"][iri]
                 except KeyError:
                     try:
-                        resource = r[dtype][ts.prefix_iri(iri)]
+                        datanodetype = r["aiida_datanodes"][ts.prefix_iri(iri)]
                     except KeyError as exc:
                         raise KeyError(
-                            f"Could not find {dtype} {iri} in {resource_type}"
+                            f"Could not find {iri} in {r['aiida_datanodes']}"
                         ) from exc
-            if save_final_output:
-                resources_for_saving = []
-                for result in resource[0]["function"]["configuration"]["inputs"]:
-                    new_resource = {
-                        "function": {
-                            "functionType": "application/vnd.dlite-generate",
-                            "configuration": {
-                                "datamodel": "http://onto-ns.com/meta/0.1/Blob",
-                                "driver": "blob",
-                                "label": result["label"],
-                                "location": "ExecFlowResult_"
-                                f"{result['label']}.txt",
-                            },
+                add_resource([
+                        {
+                            "function": {
+                                "functionType": "application/"
+                                "vnd.dlite-convert",
+                                "configuration": {
+                                    "function_name": "singlefile_converter",
+                                    "module_name": "execflow.data."
+                                    "singlefile_converter",
+                                    "inputs": [
+                                        {
+                                            "label": f"{n.var_name('output')}",
+                                            "datamodel": datanodetype,
+                                        }
+                                    ],
+                                    "outputs": [
+                                        {
+                                            "label": f"{n.suffix()}_"
+                                            "oteapi_instance",
+                                            "datamodel": resource_info[0][
+                                                "dataresource"
+                                            ]["configuration"]["datamodel"],
+                                        }
+                                    ],
+                                    "parse_driver": resource_info[0][
+                                        "dataresource"
+                                    ]["configuration"]["driver"],
+                                },
+                            }
                         }
-                    }
-                    resources_for_saving.append(new_resource)
-                resource = resources_for_saving
-
-            for strategy in resource:
-                for stype, conf in strategy.items():
-                    name = n.var_name(dtype)
-                    conf[stype] = name
-                    i += 1
-                    names[dtype].append(name)
-                    strategies.append(conf)
-
+                    ],"output")
     strategies, names = add_execflow_decoration_to_pipeline(strategies, names)
 
     source_pp = " | ".join(names["output"])
