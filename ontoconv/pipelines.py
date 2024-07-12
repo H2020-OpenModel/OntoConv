@@ -157,48 +157,64 @@ def load_simulation_resource(ts: Triplestore, iri: str):
     resource = load_container(ts, iri, recognised_keys=RECOGNISED_KEYS)
     return AttrDict(**resource)
 
-
-def generate_pipeline(
-    ts: Triplestore,
-    steps: Sequence[str],
-) -> dict:
-    """Return a declarative ExecFlow pipeline as a dict.
-
-    Arguments:
-        ts: Tripper triplestore documenting data sources and sinks.
-        steps: Sequence of names of data sources and sinks to combine.
-            The order is important and should go from source to sink.
-        client_iri: IRI of OTELib client to use.
-
-    Returns:
-        Dict-representation of a declarative ExecFlow pipeline.
-    """
-    names = []
+def generate_pipeline(ts: Triplestore, source_node, sink_node=None):
+    names = {"input": [], "output": []}
     strategies = []
-    for step in steps:
-        if "#" in step:
-            name_suffix = step.split("#", 1)[-1]
+    save_final_output = sink_node is None
+    for (dtype, node) in [("output", source_node),("input", sink_node)]:
+        if node.resource_type[dtype] == "":
+            resource = [{
+                "function": {
+                    "functionType": "application/vnd.dlite-generate",
+                    "configuration": {
+                        "datamodel": "http://onto-ns.com/meta/0.1/Blob",
+                        "driver": "blob",
+                        "label": f"{node.var_name(dtype)}",
+                        "location": f"ExecFlowResult_{node.var_name(dtype)}.txt"
+                    },
+                }
+            }]
+        elif node.resource_type[dtype] == "dataset":
+            resource = load_container(ts, node.iri, recognised_keys="basic")
         else:
-            name_suffix = step.rsplit("/", 1)[-1]
-        resource = load_container(ts, step, recognised_keys="basic")
+            r = load_simulation_resource(ts, node.resource_type[dtype])
+            try:
+                resource = r[dtype][node.iri]
+            except KeyError:
+                try:
+                    resource = r[dtype][ts.prefix_iri(node.iri)]
+                except KeyError as exc:
+                    raise KeyError(
+                        f"Could not find {dtype} {node.iri} in {node.resource_type}"
+                    ) from exc
+        i = 0
+        for r in resource:
+            for stype, conf in r.items():
+                conf[stype] = node.var_name(dtype)
+                i += 1
+                names[dtype].append(node.var_name(dtype))
+                strategies.append(conf)
 
-        for strategy in resource:
-            for stype, conf in strategy.items():
-                name = f"{name_suffix}_{stype}"
-                d = {stype: name}
-                d.update(conf)
-            names.append(name)
-            strategies.append(d)
+    strategies, names = add_execflow_decoration_to_pipeline(strategies, names)
+
+    source_pp = " | ".join(names["output"])
+    sink_pp = " | ".join(names["input"])
+    if len(sink_pp) == 0:
+        pipe = source_pp
+    else:
+        pipe = source_pp + " | " + sink_pp
+
     return {
         "version": 1,
         "strategies": strategies,
-        "pipelines": {"pipe": " | ".join(names)},
+        "pipelines": {"pipe": pipe},
     }
 
 
 def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-locals
     ts: Triplestore,
-    resources: dict,
+    nodes,
+    save_final_output = False,
     recognised_keys: "Optional[Union[dict, str]]" = "basic",
 ) -> dict:
     """Return a declarative ExecFlow pipeline as a dict.
@@ -219,79 +235,74 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
         ```python
         {'sinks': [
            {'iri': 'ss3:AbaqusConfiguration',
-            'resourcetype': 'ss3:AbaqusSimulation'},
+            'resource_type': 'ss3:AbaqusSimulation'},
            {'iri': 'ss3:AluminiumMaterialCard',
-            'resourcetype': 'ss3:AbaqusSimulation'},
+            'resource_type': 'ss3:AbaqusSimulation'},
            {'iri': 'ss3:ConcreteMaterialCard',
-            'resourcetype': 'ss3:AbaqusSimulation'}],
+            'resource_type': 'ss3:AbaqusSimulation'}],
          'sources': [
-           {'iri': 'ss3kb:abaqus_config1', 'resourcetype': 'dataset'},
+           {'iri': 'ss3kb:abaqus_config1', 'resource_type': 'dataset'},
            {'iri': 'ss3:AluminiumMaterialCard',
-            'resourcetype': 'ss3:MaterialCardGenerator'},
+            'resource_type': 'ss3:MaterialCardGenerator'},
            {'iri': 'ss3kb:abaqus_materialcard_concrete1',
-            'resourcetype': 'dataset'}]}
+            'resource_type': 'dataset'}]}
         ```
     """
     names = {"input": [], "output": []}
     strategies = []
+    i = 0
 
-    lst = [("output", s) for s in resources.get("sources", [])]
-    lst.extend([("input", s) for s in resources.get("sinks", [])])
-    i = 1
+    for n in nodes:
+        iri = n.iri
+        for dtype in ["input", "output"]:
+            resource_type = n.resource_type[dtype]
+            if resource_type == "":
+                continue;
 
-    save_final_output = False
-    if resources["sinks"] == []:
-        save_final_output = True
-    for dtype, dct in lst:
-        iri = dct["iri"]
-        resourcetype = dct["resourcetype"]
-        suffix = (
-            iri.split("#", 1)[-1] if "#" in iri else iri.rsplit("/", 1)[-1]
-        )
-        if resourcetype == "dataset":
-            if save_final_output:
-                warnings.warn(
-                    "There is no sink, therefor it does not make sense to "
-                    "create a pipeline with an already existing dataset as "
-                    "source."
-                )
-            resource = load_container(ts, iri, recognised_keys=recognised_keys)
-        else:
-            r = load_simulation_resource(ts, resourcetype)
-            try:
-                resource = r[dtype][iri]
-            except KeyError:
+            if resource_type == "dataset":
+                if save_final_output:
+                    warnings.warn(
+                        "There is no sink, therefor it does not make sense to "
+                        "create a pipeline with an already existing dataset as "
+                        "source."
+                    )
+                resource = load_container(ts, iri, recognised_keys=recognised_keys)
+            else:
+                r = load_simulation_resource(ts, resource_type)
                 try:
-                    resource = r[dtype][ts.prefix_iri(iri)]
-                except KeyError as exc:
-                    raise KeyError(
-                        f"Could not find {dtype} {iri} in {resourcetype}"
-                    ) from exc
-        if save_final_output:
-            resources_for_saving = []
-            for result in resource[0]["function"]["configuration"]["inputs"]:
-                new_resource = {
-                    "function": {
-                        "functionType": "application/vnd.dlite-generate",
-                        "configuration": {
-                            "datamodel": "http://onto-ns.com/meta/0.1/Blob",
-                            "driver": "blob",
-                            "label": result["label"],
-                            "location": "ExecFlowResult_"
-                            f"{result['label']}.txt",
-                        },
+                    resource = r[dtype][iri]
+                except KeyError:
+                    try:
+                        resource = r[dtype][ts.prefix_iri(iri)]
+                    except KeyError as exc:
+                        raise KeyError(
+                            f"Could not find {dtype} {iri} in {resource_type}"
+                        ) from exc
+            if save_final_output:
+                resources_for_saving = []
+                for result in resource[0]["function"]["configuration"]["inputs"]:
+                    new_resource = {
+                        "function": {
+                            "functionType": "application/vnd.dlite-generate",
+                            "configuration": {
+                                "datamodel": "http://onto-ns.com/meta/0.1/Blob",
+                                "driver": "blob",
+                                "label": result["label"],
+                                "location": "ExecFlowResult_"
+                                f"{result['label']}.txt",
+                            },
+                        }
                     }
-                }
-                resources_for_saving.append(new_resource)
-            resource = resources_for_saving
+                    resources_for_saving.append(new_resource)
+                resource = resources_for_saving
 
-        for strategy in resource:
-            for stype, conf in strategy.items():
-                name = f"{suffix}_{stype}_{i}"
-                conf[stype] = name
-                i += 1
-                names[dtype].append(name)
-                strategies.append(conf)
+            for strategy in resource:
+                for stype, conf in strategy.items():
+                    name = n.var_name(dtype)
+                    conf[stype] = name
+                    i += 1
+                    names[dtype].append(name)
+                    strategies.append(conf)
 
     strategies, names = add_execflow_decoration_to_pipeline(strategies, names)
 
@@ -300,7 +311,7 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
     if len(sink_pp) == 0:
         pipe = source_pp
     else:
-        pipe = source_pp + " | " + sink_pp
+        pipe = source_pp.strip(' ') + " | " + sink_pp
 
     return {
         "version": 1,
@@ -356,7 +367,7 @@ def add_execflow_decoration_to_pipeline(strategies, names):
         namebasis = [f for f in func if f["configuration"]["location"] == loc][
             0
         ]["function"]
-        label = f"{namebasis}_file"
+        label = f"{namebasis}"
         function_name = label + "_to_aiida_datanode"
         strategies.append(
             {
