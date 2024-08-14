@@ -66,11 +66,74 @@ class Node:
     def kb_suffix(self):
         return self.iri.rsplit("/", 1)[-1].replace("#", ":")
 
+    def filename(self, resource):
+        return resource["input"][self.kb_suffix()][-1]["function"]["configuration"]["location"]
+
+    def input_postprocess(self):
+        return f"{{{{ ctx.current_outputs.results[\'{self.var_name('input')}\']|to_ctx(\'{self.var_name('input')}\') }}}}"
+
+    def output_postprocess_execwrapper(self, i):
+        return f"{{{{ ctx.current_outputs.results['file_{i}']|to_ctx('{self.var_name('output')}') }}}}"
+
+    def pipeline_step(self, pipeline_file, is_last = False):
+
+        inputs = {"pipeline": pipeline_file, "run_pipeline": "pipe"}
+
+        if not is_last:
+            inputs["from_cuds"] = [ni.var_name("input") for ni in self.inputs]
+            to_cuds = [ni.var_name("output") for ni in self.inputs if ni.is_ctx_node()]
+        else:
+            to_cuds = [ni.var_name("output") for ni in self.outputs if ni.is_ctx_node()]
+
+        if len(to_cuds) != 0:
+            inputs["to_cuds"] = to_cuds
+            for output in to_cuds:
+                var = "ctx." + output
+                inputs[output] = f"{{{{ ctx.{output} }}}}"
+        ret = {"workflow": "execflow.oteapipipeline", "inputs": inputs}
+
+        if not is_last:
+            ret["postprocess"] = [ni.input_postprocess() for ni in self.inputs]
+
+        return ret
+
+    def calculation_step(self, resource):
+        # This is only for execwrapper at the moment
+        files = {}
+
+        for input in self.inputs:
+            varname = input.var_name("input") 
+            files[f"in_file_{len(files)}"] = {
+                "filename": input.filename(resource),
+                "node": f"{{{{ ctx.{varname} }}}}" 
+            }
+
+        if "files" in resource:
+            for static_file in resource["files"]:
+                files[f"in_file_{len(files)}"] = {
+                    "filename": static_file["target_file"],
+                    "template": static_file["source_uri"]
+                }
+
+        return {"workflow": resource["aiida_plugin"],
+                "inputs": {
+                    "command": resource["command"],
+                    "files": files
+                },
+                "outputs": output_filenames(resource),
+                "postprocess": [on.output_postprocess_execwrapper(i) for (i, on) in enumerate(self.outputs)]
+               }
+
+def output_filenames(resource):
+    return [{f"file_{i}": f"{resource['output'][o][0]['dataresource']['downloadUrl']}"} for (i, o) in enumerate(resource["output"])]
+
+
 def save_pipeline(name, pipeline, outdir):
     with open(
-        Path(outdir) / f"generated_pipeline_{name}.yaml", "w", encoding="utf8"
+        Path(outdir) / name, "w", encoding="utf8"
     ) as f:
         yaml.safe_dump(pipeline, f, sort_keys=False)
+
 
 def parse_ontoflow(workflow_data, kb, outdir="."):
     """
@@ -91,74 +154,31 @@ def parse_ontoflow(workflow_data, kb, outdir="."):
 
     chain = {"steps": []}
 
-    fc = 0
+    istep = 0
     # first we set up all the individuals
-    last_outputs = None
+    last = None
     for n in nodes:
         if n.is_step():
-            resource = load_simulation_resource(kb, n.iri)
-            files = {}
             pipeline = generate_ontoflow_pipeline(kb, n.inputs)
-            stepname = n.step_name()
-            save_pipeline(stepname, pipeline, outdir)
+            pipeline_file = f"pipeline_{istep}.yaml"
+            save_pipeline(pipeline_file, pipeline, outdir)
 
+            chain["steps"].append(n.pipeline_step(pipeline_file))
 
+            resource = load_simulation_resource(kb, n.iri)
+            chain["steps"].append(n.calculation_step(resource))
+            last = n
+            istep += 1
 
-            inputs = {"pipeline": f"generated_pipeline_{stepname}.yaml","run_pipeline": "pipe","from_cuds": [ni.var_name("input") for ni in n.inputs]}
-            to_cuds = [ni.var_name("output") for ni in n.inputs if ni.is_ctx_node()]
-            if len(to_cuds) != 0:
-                inputs["to_cuds"] = to_cuds
-                for output in to_cuds:
-                    var = "ctx." + output
-                    inputs[output] = f"{{{{ ctx.{output} }}}}"
+    if last is not None:
+        pipeline = generate_ontoflow_pipeline(kb, last.outputs, True)
+        pipeline_file = f"pipeline_final.yaml"
+        save_pipeline(pipeline_file, pipeline, outdir)
 
-            chain["steps"].append({"workflow": "execflow.oteapipipeline",
-                                   "inputs": inputs,
-                                   "postprocess": [f"{{{{ ctx.current_outputs.results[\'{ni.var_name('input')}\']|to_ctx(\'{ni.var_name('input')}\') }}}}" for ni in n.inputs]
-                                   })
-            for input in n.inputs:
-                varname = input.var_name("input") 
-                files[f"in_file_{len(files)}"] = {
-                    "filename": resource["input"][input.kb_suffix()][-1]["function"]["configuration"]["location"],
-                    "node": f"{{{{ ctx.{varname} }}}}" 
-                }
-            if "files" in resource:
-                for static_file in resource["files"]:
-                    files[f"in_file_{len(files)}"] = {
-                        "filename": static_file["target_file"],
-                        "template": static_file["source_uri"]
-                    }
-            output_filenames=[{f"file_{i}": f"{resource['output'][o][0]['dataresource']['downloadUrl']}"} for (i, o) in enumerate(resource["output"])]
-            chain["steps"].append({"workflow": resource["aiida_plugin"],
-                                   "inputs": {
-                                       "command": resource["command"],
-                                       "files": files
-                                   },
-                                   "outputs": output_filenames,
-
-                                   "postprocess": [f"{{{{ ctx.current_outputs.results['file_{i}']|to_ctx('{on.var_name('output')}') }}}}" for (i, on) in enumerate(n.outputs)]
-                                   })
-
-            last_outputs = n.outputs
-    if last_outputs is not None:
-        pipeline = generate_ontoflow_pipeline(kb, last_outputs, True)
-        inputs = {"pipeline": f"generated_pipeline_final_result.yaml",
-                  "run_pipeline": "pipe"}
-        to_cuds = [ni.var_name("output") for ni in last_outputs if ni.is_ctx_node()]
-        if len(to_cuds) != 0:
-            inputs["to_cuds"] = to_cuds
-            for output in to_cuds:
-                var = "ctx." + output
-                inputs[output] = f"{{{{ ctx.{output} }}}}"
-        save_pipeline("generated_pipeline_final_result.yaml", pipeline, outdir)
-        chain["steps"].append({"workflow": "execflow.oteapipipeline",
-                               "inputs": inputs,
-                               })
-
-            
+        chain["steps"].append(last.pipeline_step(pipeline_file, True))
 
     with open(
-        Path(outdir) / f"generated_workchain.yaml", "w", encoding="utf8"
+        Path(outdir) / f"workchain.yaml", "w", encoding="utf8"
     ) as f:
         yaml.safe_dump(chain, f, sort_keys=False)
 

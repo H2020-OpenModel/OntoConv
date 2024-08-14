@@ -158,60 +158,6 @@ def load_simulation_resource(ts: Triplestore, iri: str):
     resource = load_container(ts, iri, recognised_keys=RECOGNISED_KEYS)
     return AttrDict(**resource)
 
-def generate_pipeline(ts: Triplestore, source_node, sink_node=None):
-    names = {"input": [], "output": []}
-    strategies = []
-    save_final_output = sink_node is None
-    for (dtype, node) in [("output", source_node),("input", sink_node)]:
-        if node.resource_type[dtype] == "":
-            resource = [{
-                "function": {
-                    "functionType": "application/vnd.dlite-generate",
-                    "configuration": {
-                        "datamodel": "http://onto-ns.com/meta/0.1/Blob",
-                        "driver": "blob",
-                        "label": f"{node.var_name(dtype)}",
-                        "location": f"ExecFlowResult_{node.var_name(dtype)}.txt"
-                    },
-                }
-            }]
-        elif node.resource_type[dtype] == "dataset":
-            resource = load_container(ts, node.iri, recognised_keys="basic")
-        else:
-            r = load_simulation_resource(ts, node.resource_type[dtype])
-            try:
-                resource = r[dtype][node.iri]
-            except KeyError:
-                try:
-                    resource = r[dtype][ts.prefix_iri(node.iri)]
-                except KeyError as exc:
-                    raise KeyError(
-                        f"Could not find {dtype} {node.iri} in {node.resource_type}"
-                    ) from exc
-        i = 0
-        for r in resource:
-            for stype, conf in r.items():
-                conf[stype] = node.var_name(dtype)
-                i += 1
-                names[dtype].append(node.var_name(dtype))
-                strategies.append(conf)
-
-    strategies, names = add_execflow_decoration_to_pipeline(strategies, names)
-
-    source_pp = " | ".join(names["output"])
-    sink_pp = " | ".join(names["input"])
-    if len(sink_pp) == 0:
-        pipe = source_pp
-    else:
-        pipe = source_pp + " | " + sink_pp
-
-    return {
-        "version": 1,
-        "strategies": strategies,
-        "pipelines": {"pipe": pipe},
-    }
-
-
 def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-locals
     ts: Triplestore,
     nodes,
@@ -367,6 +313,8 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
     sink_pp = " | ".join(names["input"])
     if len(sink_pp) == 0:
         pipe = source_pp
+    elif len(source_pp) == 0:
+        pipe = sink_pp
     else:
         pipe = source_pp.strip(' ') + " | " + sink_pp
 
