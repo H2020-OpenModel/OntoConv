@@ -211,22 +211,22 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
 
     for n in nodes:
         iri = n.iri
+        for n1 in n.inputs:
+            if n1.resource_type["output"] == "dataset":
+                add_resource(load_container(ts, n1.iri, recognised_keys=recognised_keys), "output")
         if n.resource_type["input"] != "":
             resource_type = n.resource_type["input"]
 
-            if resource_type == "dataset":
-                add_resource(load_container(ts, iri, recognised_keys=recognised_keys))
-            else:
-                r = load_simulation_resource(ts, resource_type)
+            r = load_simulation_resource(ts, resource_type)
+            try:
+                add_resource(r["input"][iri], "input")
+            except KeyError:
                 try:
-                    add_resource(r["input"][iri], "input")
-                except KeyError:
-                    try:
-                        add_resource(r["input"][ts.prefix_iri(iri)], "input")
-                    except KeyError as exc:
-                        raise KeyError(
-                            f"Could not find input {iri} in {resource_type}"
-                        ) from exc
+                    add_resource(r["input"][ts.prefix_iri(iri)], "input")
+                except KeyError as exc:
+                    raise KeyError(
+                        f"Could not find input {iri} in {resource_type}"
+                    ) from exc
         if n.resource_type["output"] != "":
             resource_type = n.resource_type["output"]
             # r = load_simulation_resource(ts, resource_type.rsplit(":", 1)[-1])

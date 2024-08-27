@@ -9,7 +9,7 @@ from pathlib import Path
 
 import yaml
 
-from ontoconv.pipelines import generate_pipeline, generate_ontoflow_pipeline, load_simulation_resource
+from ontoconv.pipelines import generate_ontoflow_pipeline, load_simulation_resource
 from tripper.convert import load_container
 
 class Node:
@@ -118,9 +118,9 @@ class Node:
         return {"workflow": resource["aiida_plugin"],
                 "inputs": {
                     "command": resource["command"],
-                    "files": files
+                    "files": files,
+                    "outputs": output_filenames(resource)
                 },
-                "outputs": output_filenames(resource),
                 "postprocess": [on.output_postprocess_execwrapper(i) for (i, on) in enumerate(self.outputs)]
                }
 
@@ -158,7 +158,9 @@ def parse_ontoflow(workflow_data, kb, outdir="."):
     # first we set up all the individuals
     last = None
     for n in nodes:
+        print(n)
         if n.is_step():
+            print(n)
             pipeline = generate_ontoflow_pipeline(kb, n.inputs)
             pipeline_file = f"pipeline_{istep}.yaml"
             save_pipeline(pipeline_file, pipeline, outdir)
