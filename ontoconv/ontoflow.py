@@ -70,10 +70,10 @@ class Node:
         return resource["input"][self.kb_suffix()][-1]["function"]["configuration"]["location"]
 
     def input_postprocess(self):
-        return f"{{{{ ctx.current_outputs.results[\'{self.var_name('input')}\']|to_ctx(\'{self.var_name('input')}\') }}}}"
+        return f"{{{{ ctx.current.outputs.results[\'{self.var_name('input')}\']|to_ctx(\'{self.var_name('input')}\') }}}}"
 
     def output_postprocess_execwrapper(self, i):
-        return f"{{{{ ctx.current_outputs.results['file_{i}']|to_ctx('{self.var_name('output')}') }}}}"
+        return f"{{{{ ctx.current.outputs['file_{i}']|to_ctx('{self.var_name('output')}') }}}}"
 
     def pipeline_step(self, pipeline_file, is_last = False):
 
