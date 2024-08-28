@@ -99,7 +99,10 @@ class Node:
 
     def pipeline_step(self, pipeline_file, is_last=False):
 
-        inputs = {"pipeline": {"$ref": f"file:__DIR__/{pipeline_file}"}, "run_pipeline": "pipe"}
+        inputs = {
+            "pipeline": {"$ref": f"file:__DIR__/{pipeline_file}"},
+            "run_pipeline": "pipe",
+        }
 
         if not is_last:
             inputs["from_cuds"] = [ni.var_name("input") for ni in self.inputs]
@@ -142,11 +145,13 @@ class Node:
                     "filename": static_file["target_file"],
                     "template": static_file["source_uri"],
                 }
+        full_command = resource["command"].replace("\ ", "").split()
 
         return {
             "workflow": resource["aiida_plugin"],
             "inputs": {
-                "command": resource["command"],
+                "command": full_command.pop(0),
+                "arguments": full_command,
                 "files": files,
                 "outputs": output_filenames(resource),
             },
@@ -194,9 +199,7 @@ def parse_ontoflow(workflow_data, kb, outdir="."):
     # first we set up all the individuals
     last = None
     for n in nodes:
-        print(n)
         if n.is_step():
-            print(n)
             pipeline = generate_ontoflow_pipeline(kb, n.inputs)
             pipeline_file = f"pipeline_{istep}.yaml"
             save_pipeline(pipeline_file, pipeline, outdir)
