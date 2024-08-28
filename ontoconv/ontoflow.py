@@ -8,26 +8,35 @@ the oteapi pipelines.
 from pathlib import Path
 
 import yaml
-
-from ontoconv.pipelines import generate_ontoflow_pipeline, load_simulation_resource
 from tripper.convert import load_container
+
+from ontoconv.pipelines import (
+    generate_ontoflow_pipeline,
+    load_simulation_resource,
+)
+
 
 class Node:
     def __init__(self, data, nodes):
         self.inputs = []
         self.outputs = []
-        self.depth = data['depth']
-        self.iri = data['iri']
-        self.resource_type = {"output": "dataset" if 'children' not in data else "", "input": ""}
+        self.depth = data["depth"]
+        self.iri = data["iri"]
+        self.resource_type = {
+            "output": "dataset" if "children" not in data else "",
+            "input": "",
+        }
 
         if not self.resource_type["output"] == "dataset":
-            for n in data['children']:
+            for n in data["children"]:
                 node = Node(n, nodes)
-                if n['predicate'] == 'hasOutput':
+                if n["predicate"] == "hasOutput":
                     node.outputs.append(self)
                     self.resource_type["output"] = node.iri
                 else:
-                    self.inputs.append(node) # individual is singular input I guess
+                    self.inputs.append(
+                        node
+                    )  # individual is singular input I guess
                     if len(node.resource_type["input"]) == 0:
                         node.resource_type["input"] = self.iri
         self.id = len(nodes)
@@ -40,7 +49,7 @@ class Node:
             for i in self.inputs:
                 s += f"\n{i.id}: {i.iri}"
         if len(self.outputs) != 0:
-            s+= "\noutputs: "
+            s += "\noutputs: "
             for i in self.outputs:
                 s += f"\n{i.id}: {i.iri}"
         return s
@@ -52,38 +61,57 @@ class Node:
         return f"step_{self.id}"
 
     def is_dataset(self):
-        return len(self.inputs) == 1 and self.inputs[0].resource_type["output"] == "dataset"
+        return (
+            len(self.inputs) == 1
+            and self.inputs[0].resource_type["output"] == "dataset"
+        )
 
     def is_step(self):
         return len(self.outputs) != 0
 
     def is_ctx_node(self):
-        return self.resource_type['output'] != '' and len(self.inputs) == 0 and len(self.outputs) == 0
+        return (
+            self.resource_type["output"] != ""
+            and len(self.inputs) == 0
+            and len(self.outputs) == 0
+        )
 
     def suffix(self):
-        return self.iri.split("#", 1)[-1] if "#" in self.iri else self.iri.rsplit("/", 1)[-1]
+        return (
+            self.iri.split("#", 1)[-1]
+            if "#" in self.iri
+            else self.iri.rsplit("/", 1)[-1]
+        )
 
     def kb_suffix(self):
         return self.iri.rsplit("/", 1)[-1].replace("#", ":")
 
     def filename(self, resource):
-        return resource["input"][self.kb_suffix()][-1]["function"]["configuration"]["location"]
+        return resource["input"][self.kb_suffix()][-1]["function"][
+            "configuration"
+        ]["location"]
 
     def input_postprocess(self):
-        return f"{{{{ ctx.current.outputs.results[\'{self.var_name('input')}\']|to_ctx(\'{self.var_name('input')}\') }}}}"
+        return f"{{{{ ctx.current.outputs.results['{self.var_name('input')}']|to_ctx('{self.var_name('input')}') }}}}"
 
     def output_postprocess_execwrapper(self, i):
         return f"{{{{ ctx.current.outputs['file_{i}']|to_ctx('{self.var_name('output')}') }}}}"
 
-    def pipeline_step(self, pipeline_file, is_last = False):
+    def pipeline_step(self, pipeline_file, is_last=False):
 
-        inputs = {"pipeline": pipeline_file, "run_pipeline": "pipe"}
+        inputs = {"pipeline": {"$ref": f"file:__DIR__/{pipeline_file}"}, "run_pipeline": "pipe"}
 
         if not is_last:
             inputs["from_cuds"] = [ni.var_name("input") for ni in self.inputs]
-            to_cuds = [ni.var_name("output") for ni in self.inputs if ni.is_ctx_node()]
+            to_cuds = [
+                ni.var_name("output") for ni in self.inputs if ni.is_ctx_node()
+            ]
         else:
-            to_cuds = [ni.var_name("output") for ni in self.outputs if ni.is_ctx_node()]
+            to_cuds = [
+                ni.var_name("output")
+                for ni in self.outputs
+                if ni.is_ctx_node()
+            ]
 
         if len(to_cuds) != 0:
             inputs["to_cuds"] = to_cuds
@@ -102,36 +130,44 @@ class Node:
         files = {}
 
         for input in self.inputs:
-            varname = input.var_name("input") 
+            varname = input.var_name("input")
             files[f"in_file_{len(files)}"] = {
                 "filename": input.filename(resource),
-                "node": f"{{{{ ctx.{varname} }}}}" 
+                "node": f"{{{{ ctx.{varname} }}}}",
             }
 
         if "files" in resource:
             for static_file in resource["files"]:
                 files[f"in_file_{len(files)}"] = {
                     "filename": static_file["target_file"],
-                    "template": static_file["source_uri"]
+                    "template": static_file["source_uri"],
                 }
 
-        return {"workflow": resource["aiida_plugin"],
-                "inputs": {
-                    "command": resource["command"],
-                    "files": files,
-                    "outputs": output_filenames(resource)
-                },
-                "postprocess": [on.output_postprocess_execwrapper(i) for (i, on) in enumerate(self.outputs)]
-               }
+        return {
+            "workflow": resource["aiida_plugin"],
+            "inputs": {
+                "command": resource["command"],
+                "files": files,
+                "outputs": output_filenames(resource),
+            },
+            "postprocess": [
+                on.output_postprocess_execwrapper(i)
+                for (i, on) in enumerate(self.outputs)
+            ],
+        }
+
 
 def output_filenames(resource):
-    return [{f"file_{i}": f"{resource['output'][o][0]['dataresource']['downloadUrl']}"} for (i, o) in enumerate(resource["output"])]
+    return [
+        {
+            f"file_{i}": f"{resource['output'][o][0]['dataresource']['downloadUrl']}"
+        }
+        for (i, o) in enumerate(resource["output"])
+    ]
 
 
 def save_pipeline(name, pipeline, outdir):
-    with open(
-        Path(outdir) / name, "w", encoding="utf8"
-    ) as f:
+    with open(Path(outdir) / name, "w", encoding="utf8") as f:
         yaml.safe_dump(pipeline, f, sort_keys=False)
 
 
@@ -179,9 +215,7 @@ def parse_ontoflow(workflow_data, kb, outdir="."):
 
         chain["steps"].append(last.pipeline_step(pipeline_file, True))
 
-    with open(
-        Path(outdir) / f"workchain.yaml", "w", encoding="utf8"
-    ) as f:
+    with open(Path(outdir) / f"workchain.yaml", "w", encoding="utf8") as f:
         yaml.safe_dump(chain, f, sort_keys=False)
 
     # Generate the workchain
