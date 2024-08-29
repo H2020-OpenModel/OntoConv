@@ -301,15 +301,6 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                                         {
                                             "label": f"{n.var_name('output')}",
                                             "datamodel": datanodetype,
-                                            "options": {
-                                                "parse_driver": resource_info[
-                                                    0
-                                                ]["dataresource"][
-                                                    "configuration"
-                                                ][
-                                                    "driver"
-                                                ]
-                                            },
                                         }
                                     ],
                                     "outputs": [
@@ -321,6 +312,11 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                                             ]["configuration"]["datamodel"],
                                         }
                                     ],
+                                    "options": {
+                                        "parse_driver": resource_info[0][
+                                            "dataresource"
+                                        ]["configuration"]["driver"]
+                                    },
                                 },
                             }
                         }
