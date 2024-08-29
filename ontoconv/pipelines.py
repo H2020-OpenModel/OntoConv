@@ -158,10 +158,11 @@ def load_simulation_resource(ts: Triplestore, iri: str):
     resource = load_container(ts, iri, recognised_keys=RECOGNISED_KEYS)
     return AttrDict(**resource)
 
-def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-locals
+
+def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     ts: Triplestore,
     nodes,
-    save_final_output = False,
+    save_final_output=False,
     recognised_keys: "Optional[Union[dict, str]]" = "basic",
 ) -> dict:
     """Return a declarative ExecFlow pipeline as a dict.
@@ -213,7 +214,12 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
         iri = n.iri
         for n1 in n.inputs:
             if n1.resource_type["output"] == "dataset":
-                add_resource(load_container(ts, n1.iri, recognised_keys=recognised_keys), "output")
+                add_resource(
+                    load_container(
+                        ts, n1.iri, recognised_keys=recognised_keys
+                    ),
+                    "output",
+                )
         if n.resource_type["input"] != "":
             resource_type = n.resource_type["input"]
 
@@ -229,7 +235,6 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                     ) from exc
         if n.resource_type["output"] != "":
             resource_type = n.resource_type["output"]
-            # r = load_simulation_resource(ts, resource_type.rsplit(":", 1)[-1])
             r = load_simulation_resource(ts, resource_type)
             try:
                 resource_info = r["output"][iri]
@@ -244,28 +249,34 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                 if save_final_output:
                     warnings.warn(
                         "There is no sink, therefor it does not make sense to "
-                        "create a pipeline with an already existing dataset as "
-                        "source."
+                        "create a pipeline with an already existing dataset "
+                        "as source."
                     )
-                add_resource(load_container(ts, iri, recognised_keys=recognised_keys), "output")
+                add_resource(
+                    load_container(ts, iri, recognised_keys=recognised_keys),
+                    "output",
+                )
             elif save_final_output:
-                add_resource([
-                    {
-                        "function": {
-                            "functionType": "application/"
-                            "vnd.dlite-generate",
-                            "configuration": {
-                                "datamodel": "http://onto-ns.com/"
-                                "meta/0.1/Blob",
-                                "driver": "blob",
-                                "label": f"{n.var_name('output')}",
-                                "location": resource_info[0][
-                                    "dataresource"
-                                ]["downloadUrl"],
+                add_resource(
+                    [
+                        {
+                            "function": {
+                                "functionType": "application/"
+                                "vnd.dlite-generate",
+                                "configuration": {
+                                    "datamodel": "http://onto-ns.com/"
+                                    "meta/0.1/Blob",
+                                    "driver": "blob",
+                                    "label": f"{n.var_name('output')}",
+                                    "location": resource_info[0][
+                                        "dataresource"
+                                    ]["downloadUrl"],
+                                },
                             },
-                        },
-                    }
-                ], "output")
+                        }
+                    ],
+                    "output",
+                )
             else:
                 try:
                     datanodetype = r["aiida_datanodes"][iri]
@@ -276,7 +287,8 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                         raise KeyError(
                             f"Could not find {iri} in {r['aiida_datanodes']}"
                         ) from exc
-                add_resource([
+                add_resource(
+                    [
                         {
                             "function": {
                                 "functionType": "application/"
@@ -289,6 +301,15 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                                         {
                                             "label": f"{n.var_name('output')}",
                                             "datamodel": datanodetype,
+                                            "options": {
+                                                "parse_driver": resource_info[
+                                                    0
+                                                ]["dataresource"][
+                                                    "configuration"
+                                                ][
+                                                    "driver"
+                                                ]
+                                            },
                                         }
                                     ],
                                     "outputs": [
@@ -300,13 +321,12 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                                             ]["configuration"]["datamodel"],
                                         }
                                     ],
-                                    "parse_driver": resource_info[0][
-                                        "dataresource"
-                                    ]["configuration"]["driver"],
                                 },
                             }
                         }
-                    ],"output")
+                    ],
+                    "output",
+                )
     strategies, names = add_execflow_decoration_to_pipeline(strategies, names)
 
     source_pp = " | ".join(names["output"])
@@ -316,7 +336,7 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
     elif len(source_pp) == 0:
         pipe = sink_pp
     else:
-        pipe = source_pp.strip(' ') + " | " + sink_pp
+        pipe = source_pp.strip(" ") + " | " + sink_pp
 
     return {
         "version": 1,
