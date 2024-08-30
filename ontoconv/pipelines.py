@@ -312,7 +312,7 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                                             ]["configuration"]["datamodel"],
                                         }
                                     ],
-                                    "options": {
+                                    "kwargs": {
                                         "parse_driver": resource_info[0][
                                             "dataresource"
                                         ]["configuration"]["driver"]
