@@ -1,0 +1,15 @@
+version: 1
+strategies:
+- functionType: application/vnd.dlite-generate
+  configuration:
+    datamodel: http://onto-ns.com/meta/0.1/Blob
+    driver: blob
+    label: datanode_11_output
+    location: abaqus_deformation_history.txt
+  function: datanode_11_output
+- function: datanode2cuds
+  functionType: aiidacuds/datanode2cuds
+  configuration:
+    names: to_cuds
+pipelines:
+  pipe: datanode2cuds | datanode_11_output
