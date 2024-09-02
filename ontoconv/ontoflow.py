@@ -164,10 +164,8 @@ class Node:
 
 def output_filenames(resource):
     return [
-        {
-            f"file_{i}": f"{resource['output'][o][0]['dataresource']['downloadUrl']}"
-        }
-        for (i, o) in enumerate(resource["output"])
+        f"{resource['output'][o][0]['dataresource']['downloadUrl']}"
+        for o in resource["output"]
     ]
 
 
