@@ -94,8 +94,9 @@ class Node:
     def input_postprocess(self):
         return f"{{{{ ctx.current.outputs.results['{self.var_name('input')}']|to_ctx('{self.var_name('input')}') }}}}"
 
-    def output_postprocess_execwrapper(self, i):
-        return f"{{{{ ctx.current.outputs['file_{i}']|to_ctx('{self.var_name('output')}') }}}}"
+    def output_postprocess_execwrapper(self, filename):
+        f = filename.replace(".", "_")
+        return f"{{{{ ctx.current.outputs['{f}']|to_ctx('{self.var_name('output')}') }}}}"
 
     def pipeline_step(self, pipeline_file, is_last=False):
 
@@ -146,6 +147,7 @@ class Node:
                     "template": static_file["source_uri"],
                 }
         full_command = resource["command"].replace("\ ", "").split()
+        outfiles = output_filenames(resource)
 
         return {
             "workflow": resource["aiida_plugin"],
@@ -153,11 +155,11 @@ class Node:
                 "command": full_command.pop(0),
                 "arguments": full_command,
                 "files": files,
-                "outputs": output_filenames(resource),
+                "outputs": outfiles,
             },
             "postprocess": [
-                on.output_postprocess_execwrapper(i)
-                for (i, on) in enumerate(self.outputs)
+                on.output_postprocess_execwrapper(f)
+                for (f, on) in zip(outfiles, self.outputs)
             ],
         }
 
