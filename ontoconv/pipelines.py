@@ -196,7 +196,7 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
             'resource_type': 'dataset'}]}
         ```
     """
-    names = {"input": [], "output": []}
+    names = {"input": [], "output": [], "triplestore": []}
     strategies = []
     i = 0
 
@@ -271,12 +271,39 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                                     "location": resource_info[0][
                                         "dataresource"
                                     ]["downloadUrl"],
+                                    "kb_document_class": iri,
+                                    "kb_document_computation": n.resource_type[
+                                        "output"
+                                    ],
+                                    "kb_document_base_iri": iri.split("#")[0]
+                                    + "kb#",
+                                    "kb_document_update": resource_info[0],
                                 },
                             },
                         }
                     ],
                     "output",
                 )
+                add_resource(
+                    [
+                        {
+                            "filter": {
+                                "filterType": "application/"
+                                "vnd.dlite-settings",
+                                "configuration": {
+                                    "label": "tripper.triplestore",
+                                    "settings": {
+                                        "backend": "rdflib",
+                                        # Need a persistent triplestore
+                                        "triplestore_url": "temp.ttl",
+                                    },
+                                },
+                            },
+                        }
+                    ],
+                    "triplestore",
+                )
+
             else:
                 try:
                     datanodetype = r["aiida_datanodes"][iri]
@@ -333,6 +360,8 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
         pipe = sink_pp
     else:
         pipe = source_pp.strip(" ") + " | " + sink_pp
+    if len(names["triplestore"]) == 1:
+        pipe = pipe + " | " + names["triplestore"][0]
 
     return {
         "version": 1,
