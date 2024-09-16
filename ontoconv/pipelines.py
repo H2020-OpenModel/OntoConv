@@ -155,7 +155,9 @@ def load_simulation_resource(ts: Triplestore, iri: str):
         A dict with attribute access documentating the simulation tool.
 
     """
-    resource = load_container(ts, iri, recognised_keys=RECOGNISED_KEYS)
+    resource = load_container(
+        ts, iri, recognised_keys=RECOGNISED_KEYS, ignore_unrecognised=True
+    )
     return AttrDict(**resource)
 
 
@@ -216,7 +218,10 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
             if n1.resource_type["output"] == "dataset":
                 add_resource(
                     load_container(
-                        ts, n1.iri, recognised_keys=recognised_keys
+                        ts,
+                        n1.iri,
+                        recognised_keys=recognised_keys,
+                        ignore_unrecognised=True,
                     ),
                     "output",
                 )
@@ -253,7 +258,12 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                         "as source."
                     )
                 add_resource(
-                    load_container(ts, iri, recognised_keys=recognised_keys),
+                    load_container(
+                        ts,
+                        iri,
+                        recognised_keys=recognised_keys,
+                        ignore_unrecognised=True,
+                    ),
                     "output",
                 )
             elif save_final_output:
@@ -462,7 +472,9 @@ def get_data(
     pipeline = None
 
     for step in steps:
-        strategies = load_container(ts, step, recognised_keys="basic")
+        strategies = load_container(
+            ts, step, recognised_keys="basic", ignore_unrecognised=True
+        )
         for filtertype, config in strategies.items():
             creator = getattr(client, f"create_{filtertype}")
             pipe = creator(**config)
