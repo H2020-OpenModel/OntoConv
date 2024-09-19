@@ -27,6 +27,7 @@ RECOGNISED_KEYS.update(
         "install_command": (
             "http://open-model.eu/ontologies/oip#InstallCommand"
         ),
+        "datamodel": "http://emmo.info/datamodel#DataModel",  # NB needs update
     }
 )
 
@@ -135,13 +136,16 @@ def save_simulation_resource(ts: Triplestore, iri: str, resource: dict):
     save_container(ts, resource, iri, recognised_keys=RECOGNISED_KEYS)
 
     # Ensure that all input and output are datasets
+    # print(resource["input"].keys(), type(resource["input"]))
+    # print(resource)
     for input in resource.get("input", {}):
-        for dataset in input:
-            ts.add((dataset, RDF.type, OTEIO.DataSink))
+        # print('INPUT', input, repr(input))
+        # for dataset in input:
+        ts.add((input, RDF.type, OTEIO.DataSink))
 
     for output in resource.get("output", {}):
-        for dataset in output:
-            ts.add((dataset, RDF.type, OTEIO.DataSource))
+        # for dataset in output:
+        ts.add((output, RDF.type, OTEIO.DataSource))
 
 
 def load_simulation_resource(ts: Triplestore, iri: str):
@@ -166,16 +170,25 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
     nodes,
     save_final_output=False,
     recognised_keys: "Optional[Union[dict, str]]" = "basic",
+    target_ts: "Optional[Triplestore]" = None,
 ) -> dict:
     """Return a declarative ExecFlow pipeline as a dict.
 
     Arguments:
-        ts: Tripper triplestore documenting data sources and sinks.
+        ts: Tripper triplestore documenting data sources and model
+            inputs and outputs.
         resources: A dict referring to OTEAPI partial pipelines for
             a set of data sources and sinks.
             See the example below for the expected structure.
         client_iri: IRI of OTELib client to use.
-
+        recognised_keys: Dict that maps keys to IRIs (in an ontology).
+            These are used to detect keys in the knowledge base.
+            E.g. 'downloadUrl' is recognised in the kb as such a key.
+            Recognised keys are found in the global variable
+            ontoconv.pipelines.RECOGNISED_KEYS
+        target_ts: Tripper triplestore in which generated output of
+            the pipeline is to be documented. Defaults to the same
+            triplestore in which sources and models are documented.
     Returns:
         Dict-representation of a declarative ExecFlow pipeline.
 
@@ -198,12 +211,18 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
             'resource_type': 'dataset'}]}
         ```
     """
+    if target_ts is None:
+        target_ts = ts
+
     names = {"input": [], "output": [], "triplestore": []}
     strategies = []
     i = 0
 
     def add_resource(resource, dtype):
+        # print('resource', repr(resource))
+        # print('dtype', repr(dtype))
         for strategy in resource:
+            # print('strategy', repr(strategy))
             for stype, conf in strategy.items():
                 name = n.var_name(dtype)
                 conf[stype] = name
@@ -212,9 +231,14 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                 names[dtype].append(name)
                 strategies.append(conf)
 
+    # print('nodes')
+    # print(repr(nodes))
     for n in nodes:
         iri = n.iri
         for n1 in n.inputs:
+            # print('---')
+            # print('n1', n1)
+            # print('---')
             if n1.resource_type["output"] == "dataset":
                 add_resource(
                     load_container(
@@ -294,6 +318,23 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                     ],
                     "output",
                 )
+                if target_ts.backend_name == "rdflib":
+                    settings = {
+                        "backend": "rdflib",
+                        "triplestore_url": target_ts.triplestore_url,
+                    }
+                elif target_ts.backend_name == "fuseki":
+                    settings = {
+                        "backend": "fuseki",
+                        "triplestore_url": target_ts.kwargs["triplestore_url"],
+                        "database": target_ts.database,
+                    }
+                else:
+                    raise KeyError(
+                        f"Triplestore backend {target_ts.backend}, "
+                        "not suppoorted by OntoConv"
+                    )
+
                 add_resource(
                     [
                         {
@@ -302,11 +343,7 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                                 "vnd.dlite-settings",
                                 "configuration": {
                                     "label": "tripper.triplestore",
-                                    "settings": {
-                                        "backend": "rdflib",
-                                        # Need a persistent triplestore
-                                        "triplestore_url": "temp.ttl",
-                                    },
+                                    "settings": settings,
                                 },
                             },
                         }
