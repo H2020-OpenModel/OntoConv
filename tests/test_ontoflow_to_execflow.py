@@ -12,6 +12,8 @@ def test_full_ontoconv():
     from yaml import safe_load
 
     from ontoconv.ontoflow import parse_ontoflow
+    from os import listdir
+    from os.path import isfile, join
 
     ts = Triplestore(backend="rdflib")
     ts.parse(indir / "SS3kb.ttl")
@@ -22,7 +24,7 @@ def test_full_ontoconv():
     parse_ontoflow(data, ts, outdir=outdir)
 
     # compare the generated files with the expected ones
-    def test_compare_files(filename):
+    def test_compare_file(filename, pipeline=True):
         # use deepdiff to compare the yaml files
 
         generated_file = outdir / filename
@@ -33,28 +35,37 @@ def test_full_ontoconv():
         with open(expected_file, encoding="utf8") as f:
             expected_pipeline = safe_load(f)
 
-        diff = deepdiff.DeepDiff(
-            generated_pipeline["strategies"],
-            expected_pipeline["strategies"],
-            ignore_order=True,
-        )
-        assert not diff
+        if pipeline:
+            diff = deepdiff.DeepDiff(
+                generated_pipeline["strategies"],
+                expected_pipeline["strategies"],
+                ignore_order=True,
+            )
+            assert not diff
 
-        pipe1 = generated_pipeline["pipelines"]["pipe"].split(" | ")
-        pipe2 = expected_pipeline["pipelines"]["pipe"].split(" | ")
-        # Since the order of steps in the pipeline is not guaranteed,
-        # we compare the sets.
-        # Note that we thus do not compare that all sources
-        # come before all sinks.
-        assert set(pipe1) == set(pipe2)
+            pipe1 = generated_pipeline["pipelines"]["pipe"].split(" | ")
+            pipe2 = expected_pipeline["pipelines"]["pipe"].split(" | ")
+            # Since the order of steps in the pipeline is not guaranteed,
+            # we compare the sets.
+            # Note that we thus do not compare that all sources
+            # come before all sinks.
+            assert set(pipe1) == set(pipe2)
+        else:
+            diff = deepdiff.DeepDiff(
+                generated_pipeline,
+                expected_pipeline,
+                ignore_order=True,
+            )
+            assert not diff
 
-    files = [
-        "generated_pipeline_1.yaml",
-        "generated_pipeline_2.yaml",
-        "generated_pipeline_3.yaml",
-        # "generated_workchain.yaml",
-    ]
+
+
+    files = [f for f in listdir(expecteddir) if isfile(join(expecteddir, f)) and "pipeline" in f]
     for filename in files:
-        print("Comparing", filename)
-        test_compare_files(filename)
-        print("Done comparing", filename)
+        test_compare_file(filename)
+
+    test_compare_file("workchain.yaml", False)
+
+
+
+
