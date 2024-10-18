@@ -8,7 +8,6 @@ the oteapi pipelines.
 from pathlib import Path
 
 import yaml
-from tripper.convert import load_container
 
 from ontoconv.pipelines import (
     generate_ontoflow_pipeline,
@@ -17,6 +16,10 @@ from ontoconv.pipelines import (
 
 
 class Node:
+    """
+    A Node in the AiiDA workflow.
+    """
+
     def __init__(self, data, nodes):
         self.inputs = []
         self.outputs = []
@@ -43,7 +46,10 @@ class Node:
         nodes.append(self)
 
     def __str__(self):
-        s = f"Node: {self.id}:\niri:           {self.iri}\nresource_type: {self.resource_type}"
+        s = (
+            f"Node: {self.id}:\niri:           {self.iri}"
+            f"\nresource_type: {self.resource_type}"
+        )
         if len(self.inputs) != 0:
             s += "\ninputs: "
             for i in self.inputs:
@@ -55,21 +61,26 @@ class Node:
         return s
 
     def var_name(self, dtype):
+        """Return a name for a datanode."""
         return f"datanode_{self.id}_{dtype}"
 
     def step_name(self):
+        """Return a name for a step."""
         return f"step_{self.id}"
 
     def is_dataset(self):
+        """Check whether the Node is a dataset."""
         return (
             len(self.inputs) == 1
             and self.inputs[0].resource_type["output"] == "dataset"
         )
 
     def is_step(self):
+        """Check if the Node is a step."""
         return len(self.outputs) != 0
 
     def is_ctx_node(self):
+        """Check if the Node is in the context."""
         return (
             self.resource_type["output"] != ""
             and len(self.inputs) == 0
@@ -77,6 +88,9 @@ class Node:
         )
 
     def suffix(self):
+        """
+        Return the suffix.
+        """
         return (
             self.iri.split("#", 1)[-1]
             if "#" in self.iri
@@ -84,21 +98,34 @@ class Node:
         )
 
     def kb_suffix(self):
+        """
+        The suffix of the knowledge base.
+        """
         return self.iri.rsplit("/", 1)[-1].replace("#", ":")
 
     def filename(self, resource):
+        """Return the filename."""
         return resource["input"][self.kb_suffix()][-1]["function"][
             "configuration"
         ]["location"]
 
     def input_postprocess(self):
-        return f"{{{{ ctx.current.outputs.results['{self.var_name('input')}']|to_ctx('{self.var_name('input')}') }}}}"
+        """Get input for postpocessing"""
+        return (
+            f"{{{{ ctx.current.outputs.results['{self.var_name('input')}']"
+            f"|to_ctx('{self.var_name('input')}') }}}}"
+        )
 
     def output_postprocess_execwrapper(self, filename):
+        """Get postprocessing step after execwrapper."""
         f = filename.replace(".", "_")
-        return f"{{{{ ctx.current.outputs['{f}']|to_ctx('{self.var_name('output')}') }}}}"
+        return (
+            f"{{{{ ctx.current.outputs['{f}']|"
+            f"to_ctx('{self.var_name('output')}') }}}}"
+        )
 
     def pipeline_step(self, pipeline_file, is_last=False):
+        """Create a pipeline step."""
 
         inputs = {
             "pipeline": {"$ref": f"file:__DIR__/{pipeline_file}"},
@@ -120,7 +147,6 @@ class Node:
         if len(to_cuds) != 0:
             inputs["to_cuds"] = to_cuds
             for output in to_cuds:
-                var = "ctx." + output
                 inputs[output] = f"{{{{ ctx.{output} }}}}"
         ret = {"workflow": "execflow.oteapipipeline", "inputs": inputs}
 
@@ -130,13 +156,14 @@ class Node:
         return ret
 
     def calculation_step(self, resource):
+        """Create a calculation step."""
         # This is only for execwrapper at the moment
         files = {}
 
-        for input in self.inputs:
-            varname = input.var_name("input")
+        for inp in self.inputs:
+            varname = inp.var_name("input")
             files[f"in_file_{len(files)}"] = {
-                "filename": input.filename(resource),
+                "filename": inp.filename(resource),
                 "node": f"{{{{ ctx.{varname} }}}}",
             }
 
@@ -146,7 +173,7 @@ class Node:
                     "filename": static_file["target_file"],
                     "template": static_file["source_uri"],
                 }
-        full_command = resource["command"].replace("\ ", "").split()
+        full_command = resource["command"].replace("\\", "").split()
         outfiles = output_filenames(resource)
 
         return {
@@ -165,6 +192,7 @@ class Node:
 
 
 def output_filenames(resource):
+    """Get outpit filenames."""
     return [
         f"{resource['output'][o][0]['dataresource']['downloadUrl']}"
         for o in resource["output"]
@@ -172,6 +200,7 @@ def output_filenames(resource):
 
 
 def save_pipeline(name, pipeline, outdir):
+    """Save the pipeline to file."""
     with open(Path(outdir) / name, "w", encoding="utf8") as f:
         yaml.safe_dump(pipeline, f, sort_keys=False)
 
@@ -197,7 +226,9 @@ def parse_ontoflow(
 
     """
     nodes = []
-    root = Node(workflow_data, nodes)
+    print("a", nodes)
+    # Update nodes
+    Node(workflow_data, nodes)
 
     chain = {"steps": []}
 
@@ -222,20 +253,10 @@ def parse_ontoflow(
             kb, last.outputs, True, target_ts=target_kb
         )
         pipeline_file = f"pipeline_final.yaml"
+
         save_pipeline(pipeline_file, pipeline, outdir)
 
         chain["steps"].append(last.pipeline_step(pipeline_file, True))
 
-    with open(Path(outdir) / f"workchain.yaml", "w", encoding="utf8") as f:
+    with open(Path(outdir) / "workchain.yaml", "w", encoding="utf8") as f:
         yaml.safe_dump(chain, f, sort_keys=False)
-
-    # Generate the workchain
-
-    # Make the correct connections between the workchain and the pipelines
-    # 1. make sure that the pipelie is placed in the correct order
-    #    in the workchains
-    # 2. make sure that the generated files are placed in the correct
-    #    place in the workchain
-    #    (i.e. the correct data is passed to the correct AiiDA datanode)
-    # 3. make sure that the correct labels are passed between
-    #    workchain and pipelines
