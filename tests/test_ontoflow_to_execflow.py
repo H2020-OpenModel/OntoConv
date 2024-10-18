@@ -6,14 +6,15 @@ pipelines and workchain."""
 def test_full_ontoconv():
     """Test generating oteapi pipelines and workchain
     from a given workflow description and a kb."""
+    from os import listdir
+    from os.path import isfile, join
+
     import deepdiff
     from paths import expecteddir, indir, outdir
     from tripper.triplestore import Triplestore
     from yaml import safe_load
 
     from ontoconv.ontoflow import parse_ontoflow
-    from os import listdir
-    from os.path import isfile, join
 
     ts = Triplestore(backend="rdflib")
     ts.parse(indir / "SS3kb.ttl")
@@ -58,14 +59,12 @@ def test_full_ontoconv():
             )
             assert not diff
 
-
-
-    files = [f for f in listdir(expecteddir) if isfile(join(expecteddir, f)) and "pipeline" in f]
+    files = [
+        f
+        for f in listdir(expecteddir)
+        if isfile(join(expecteddir, f)) and "pipeline" in f
+    ]
     for filename in files:
         test_compare_file(filename)
 
     test_compare_file("workchain.yaml", False)
-
-
-
-
