@@ -6,10 +6,27 @@ strategies:
     driver: blob
     label: datanode_11_output
     location: abaqus_deformation_history.txt
+    kb_document_class: http://open-model.eu/ontologies/ss3#AbaqusDeformationHistory
+    kb_document_computation: http://open-model.eu/ontologies/ss3#AbaqusSimulation
+    kb_document_base_iri: http://open-model.eu/ontologies/ss3kb#
+    kb_document_update:
+      dataresource:
+        downloadUrl: abaqus_deformation_history.txt
+        mediaType: application/vnd.dlite-parse
+        configuration:
+          driver: plugin_abaqus_output
+          datamodel: http://www.sintef.no/calm/0.1/AbaqusDeformationHistory
   function: datanode_11_output
+- filterType: application/vnd.dlite-settings
+  configuration:
+    label: tripper.triplestore
+    settings:
+      backend: rdflib
+      triplestore_url: null
+  filter: datanode_11_triplestore
 - function: datanode2cuds
   functionType: aiidacuds/datanode2cuds
   configuration:
     names: to_cuds
 pipelines:
-  pipe: datanode2cuds | datanode_11_output
+  pipe: datanode2cuds | datanode_11_output | datanode_11_triplestore

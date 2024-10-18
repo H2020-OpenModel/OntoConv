@@ -321,7 +321,7 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                 if target_ts.backend_name == "rdflib":
                     settings = {
                         "backend": "rdflib",
-                        "triplestore_url": target_ts.triplestore_url,
+                        "triplestore_url": target_ts.backend.triplestore_url,
                     }
                 elif target_ts.backend_name == "fuseki":
                     settings = {
