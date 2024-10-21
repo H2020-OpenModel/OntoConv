@@ -252,7 +252,7 @@ def parse_ontoflow(
         pipeline = generate_ontoflow_pipeline(
             kb, last.outputs, True, target_ts=target_kb
         )
-        pipeline_file = f"pipeline_final.yaml"
+        pipeline_file = "pipeline_final.yaml"
 
         save_pipeline(pipeline_file, pipeline, outdir)
 
