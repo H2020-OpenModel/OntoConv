@@ -2,45 +2,44 @@ version: 1
 strategies:
 - downloadUrl: https://raw.githubusercontent.com/H2020-OpenModel/Public/main/data/SS3/tabulated_elasto_plastic.json
   mediaType: application/vnd.dlite-parse
-  configuration:
-    driver: json
-    metadata: http://www.sintef.no/calm/0.1/TabulatedElastoPlastic
   type: ss3:TabulatedElastoPlastic
-  dataresource: tabulated_elastoplastic1_dataresource_1
+  configuration:
+    metadata: http://www.sintef.no/calm/0.1/TabulatedElastoPlastic
+    driver: json
+  dataresource: datanode_3_output
+- functionType: application/vnd.dlite-generate
+  configuration:
+    location: tabulated_elastoplastic.json
+    driver: json
+    datamodel: http://www.sintef.no/calm/0.1/TabulatedElastoPlastic
+  function: datanode_3_input
 - downloadUrl: file://tests/test_dlite_plugins/output/yieldstress-output.txt
   mediaType: application/vnd.dlite-parse
-  type: ss3:YieldStrength
   configuration:
     driver: yieldstress
     metadata: http://onto-ns.com/meta/calm/0.1/YieldStress
-  dataresource: yieldstrength1_dataresource_2
-- configuration:
-    location: tabulated_elastoplastic.json
-    datamodel: http://www.sintef.no/calm/0.1/TabulatedElastoPlastic
-    driver: json
-  functionType: application/vnd.dlite-generate
-  function: TabulatedElastoPlastic_function_3
+  type: ss3:YieldStrength
+  dataresource: datanode_5_output
 - configuration:
     datamodel: http://onto-ns.com/meta/calm/0.1/YieldStress
     location: yieldstress-input.txt
     driver: yieldstress
   functionType: application/vnd.dlite-generate
-  function: YieldStrength_function_4
-- function: YieldStrength_function_4_file_to_aiida_datanode
+  function: datanode_5_input
+- function: datanode_5_input_to_aiida_datanode
   functionType: aiidacuds/file2collection
   configuration:
     path: yieldstress-input.txt
-    label: YieldStrength_function_4_file
-- function: TabulatedElastoPlastic_function_3_file_to_aiida_datanode
+    label: datanode_5_input
+- function: datanode_3_input_to_aiida_datanode
   functionType: aiidacuds/file2collection
   configuration:
     path: tabulated_elastoplastic.json
-    label: TabulatedElastoPlastic_function_3_file
+    label: datanode_3_input
 - function: cuds2datanode
   functionType: aiidacuds/cuds2datanode
   configuration:
     names: from_cuds
 pipelines:
-  pipe: tabulated_elastoplastic1_dataresource_1 | yieldstrength1_dataresource_2 |
-    TabulatedElastoPlastic_function_3 | YieldStrength_function_4 | YieldStrength_function_4_file_to_aiida_datanode
-    | TabulatedElastoPlastic_function_3_file_to_aiida_datanode | cuds2datanode
+  pipe: datanode_3_output | datanode_5_output | datanode_3_input | datanode_5_input
+    | datanode_5_input_to_aiida_datanode | datanode_3_input_to_aiida_datanode | cuds2datanode

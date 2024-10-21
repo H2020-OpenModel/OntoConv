@@ -3,7 +3,7 @@
 __version__ = "0.1.0"
 
 from .pipelines import (
-    generate_pipeline,
+    generate_ontoflow_pipeline,
     get_data,
     load_simulation_resource,
     populate_triplestore,
@@ -12,7 +12,7 @@ from .pipelines import (
 
 __all__ = (
     "__version__",
-    "generate_pipeline",
+    "generate_ontoflow_pipeline",
     "get_data",
     "load_simulation_resource",
     "populate_triplestore",

@@ -159,47 +159,10 @@ def load_simulation_resource(ts: Triplestore, iri: str):
     return AttrDict(**resource)
 
 
-def generate_pipeline(
+def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     ts: Triplestore,
-    steps: Sequence[str],
-) -> dict:
-    """Return a declarative ExecFlow pipeline as a dict.
-
-    Arguments:
-        ts: Tripper triplestore documenting data sources and sinks.
-        steps: Sequence of names of data sources and sinks to combine.
-            The order is important and should go from source to sink.
-        client_iri: IRI of OTELib client to use.
-
-    Returns:
-        Dict-representation of a declarative ExecFlow pipeline.
-    """
-    names = []
-    strategies = []
-    for step in steps:
-        if "#" in step:
-            name_suffix = step.split("#", 1)[-1]
-        else:
-            name_suffix = step.rsplit("/", 1)[-1]
-        resource = load_container(ts, step, recognised_keys="basic")
-
-        for strategy in resource:
-            for stype, conf in strategy.items():
-                name = f"{name_suffix}_{stype}"
-                d = {stype: name}
-                d.update(conf)
-            names.append(name)
-            strategies.append(d)
-    return {
-        "version": 1,
-        "strategies": strategies,
-        "pipelines": {"pipe": " | ".join(names)},
-    }
-
-
-def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-locals, too-many-statements
-    ts: Triplestore,
-    resources: dict,
+    nodes,
+    save_final_output=False,
     recognised_keys: "Optional[Union[dict, str]]" = "basic",
 ) -> dict:
     """Return a declarative ExecFlow pipeline as a dict.
@@ -220,61 +183,101 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
         ```python
         {'sinks': [
            {'iri': 'ss3:AbaqusConfiguration',
-            'resourcetype': 'ss3:AbaqusSimulation'},
+            'resource_type': 'ss3:AbaqusSimulation'},
            {'iri': 'ss3:AluminiumMaterialCard',
-            'resourcetype': 'ss3:AbaqusSimulation'},
+            'resource_type': 'ss3:AbaqusSimulation'},
            {'iri': 'ss3:ConcreteMaterialCard',
-            'resourcetype': 'ss3:AbaqusSimulation'}],
+            'resource_type': 'ss3:AbaqusSimulation'}],
          'sources': [
-           {'iri': 'ss3kb:abaqus_config1', 'resourcetype': 'dataset'},
+           {'iri': 'ss3kb:abaqus_config1', 'resource_type': 'dataset'},
            {'iri': 'ss3:AluminiumMaterialCard',
-            'resourcetype': 'ss3:MaterialCardGenerator'},
+            'resource_type': 'ss3:MaterialCardGenerator'},
            {'iri': 'ss3kb:abaqus_materialcard_concrete1',
-            'resourcetype': 'dataset'}]}
+            'resource_type': 'dataset'}]}
         ```
     """
     names = {"input": [], "output": []}
     strategies = []
+    i = 0
 
-    lst = [("output", s) for s in resources.get("sources", [])]
-    lst.extend([("input", s) for s in resources.get("sinks", [])])
-    i = 1
+    def add_resource(resource, dtype):
+        for strategy in resource:
+            for stype, conf in strategy.items():
+                name = n.var_name(dtype)
+                conf[stype] = name
+                nonlocal i
+                i += 1
+                names[dtype].append(name)
+                strategies.append(conf)
 
-    # If there are no sinks, we have now reached the final output
-    # that was given as target in OntoFlow. This final output
-    # should be saved somewhere with corresponding documentation.
-    save_final_output = False
-    if resources["sinks"] == []:
-        save_final_output = True
-
-    for dtype, dct in lst:
-        iri = dct["iri"]
-        resourcetype = dct["resourcetype"]
-        suffix = (
-            iri.split("#", 1)[-1] if "#" in iri else iri.rsplit("/", 1)[-1]
-        )
-        if resourcetype == "dataset":
-            if save_final_output:
-                warnings.warn(
-                    "There is no sink, therefor it does not make sense to "
-                    "create a pipeline with an already existing dataset as "
-                    "source."
+    for n in nodes:
+        iri = n.iri
+        for n1 in n.inputs:
+            if n1.resource_type["output"] == "dataset":
+                add_resource(
+                    load_container(
+                        ts, n1.iri, recognised_keys=recognised_keys
+                    ),
+                    "output",
                 )
-            resource = load_container(ts, iri, recognised_keys=recognised_keys)
-        else:
-            r = load_simulation_resource(ts, resourcetype)
+        if n.resource_type["input"] != "":
+            resource_type = n.resource_type["input"]
+
+            r = load_simulation_resource(ts, resource_type)
             try:
-                resource_info = r[dtype][iri]
+                add_resource(r["input"][iri], "input")
             except KeyError:
                 try:
-                    resource_info = r[dtype][ts.prefix_iri(iri)]
+                    add_resource(r["input"][ts.prefix_iri(iri)], "input")
                 except KeyError as exc:
                     raise KeyError(
-                        f"Could not find {dtype} {iri} in {resourcetype}"
+                        f"Could not find input {iri} in {resource_type}"
                     ) from exc
-            if dtype == "input":
-                resource = resource_info
-            elif dtype == "output":
+        if n.resource_type["output"] != "":
+            resource_type = n.resource_type["output"]
+            r = load_simulation_resource(ts, resource_type)
+            try:
+                resource_info = r["output"][iri]
+            except KeyError:
+                try:
+                    resource_info = r["output"][ts.prefix_iri(iri)]
+                except KeyError as exc:
+                    raise KeyError(
+                        f"Could not find output {iri} in {resource_type}"
+                    ) from exc
+            if n.resource_type["output"] == "dataset":
+                if save_final_output:
+                    warnings.warn(
+                        "There is no sink, therefor it does not make sense to "
+                        "create a pipeline with an already existing dataset "
+                        "as source."
+                    )
+                add_resource(
+                    load_container(ts, iri, recognised_keys=recognised_keys),
+                    "output",
+                )
+            elif save_final_output:
+                add_resource(
+                    [
+                        {
+                            "function": {
+                                "functionType": "application/"
+                                "vnd.dlite-generate",
+                                "configuration": {
+                                    "datamodel": "http://onto-ns.com/"
+                                    "meta/0.1/Blob",
+                                    "driver": "blob",
+                                    "label": f"{n.var_name('output')}",
+                                    "location": resource_info[0][
+                                        "dataresource"
+                                    ]["downloadUrl"],
+                                },
+                            },
+                        }
+                    ],
+                    "output",
+                )
+            else:
                 try:
                     datanodetype = r["aiida_datanodes"][iri]
                 except KeyError:
@@ -284,32 +287,8 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                         raise KeyError(
                             f"Could not find {iri} in {r['aiida_datanodes']}"
                         ) from exc
-
-                # For now, we create a pipeline that saves the content of the
-                # singlefile data node in the current directory.
-                # This is a temporary solution until we have a better way to
-                # determine where to save the data and its documentation.
-                if save_final_output:
-                    resource = [
-                        {
-                            "function": {
-                                "functionType": "application/"
-                                "vnd.dlite-generate",
-                                "configuration": {
-                                    "datamodel": "http://onto-ns.com/"
-                                    "meta/0.1/Blob",
-                                    "driver": "blob",
-                                    "label": f"{suffix}_aiida_datanode",
-                                    "location": resource_info[0][
-                                        "dataresource"
-                                    ]["downloadUrl"],
-                                },
-                            },
-                        }
-                    ]
-
-                else:
-                    resource = [
+                add_resource(
+                    [
                         {
                             "function": {
                                 "functionType": "application/"
@@ -320,49 +299,40 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                                     "singlefile_converter",
                                     "inputs": [
                                         {
-                                            "label": f"{suffix}"
-                                            "_aiida_datanode",
+                                            "label": f"{n.var_name('output')}",
                                             "datamodel": datanodetype,
                                         }
                                     ],
                                     "outputs": [
                                         {
-                                            "label": f"{suffix}_"
+                                            "label": f"{n.suffix()}_"
                                             "oteapi_instance",
                                             "datamodel": resource_info[0][
                                                 "dataresource"
                                             ]["configuration"]["datamodel"],
                                         }
                                     ],
-                                    "parse_driver": resource_info[0][
-                                        "dataresource"
-                                    ]["configuration"]["driver"],
+                                    "kwargs": {
+                                        "parse_driver": resource_info[0][
+                                            "dataresource"
+                                        ]["configuration"]["driver"]
+                                    },
                                 },
                             }
                         }
-                    ]
-            else:
-                raise ValueError(
-                    f"Unknown resource type: {dtype}, only 'input'"
-                    "and 'output' are allowed."
+                    ],
+                    "output",
                 )
-
-        for strategy in resource:
-            for stype, conf in strategy.items():
-                name = f"{suffix}_{stype}_{i}"
-                conf[stype] = name
-                i += 1
-                names[dtype].append(name)
-                strategies.append(conf)
-
     strategies, names = add_execflow_decoration_to_pipeline(strategies, names)
 
     source_pp = " | ".join(names["output"])
     sink_pp = " | ".join(names["input"])
     if len(sink_pp) == 0:
         pipe = source_pp
+    elif len(source_pp) == 0:
+        pipe = sink_pp
     else:
-        pipe = source_pp + " | " + sink_pp
+        pipe = source_pp.strip(" ") + " | " + sink_pp
 
     return {
         "version": 1,
@@ -418,7 +388,7 @@ def add_execflow_decoration_to_pipeline(strategies, names):
         namebasis = [f for f in func if f["configuration"]["location"] == loc][
             0
         ]["function"]
-        label = f"{namebasis}_file"
+        label = f"{namebasis}"
         function_name = label + "_to_aiida_datanode"
         strategies.append(
             {

@@ -1,0 +1,75 @@
+version: 1
+strategies:
+- downloadUrl: file://tests/testfiles/input_data/abaqus_conf.zip
+  mediaType: application/vnd.dlite-parse
+  type: ss3:AbaqusConfiguration
+  configuration:
+    options: inputfile=CementModel_Final_contact.inp;ppfile=OpenODB7.py
+    metadata: http://www.sintef.no/calm/0.1/AbaqusConfiguration
+    driver: abaqus_configuration
+  dataresource: datanode_1_output
+- configuration:
+    location: abaqusconf.json
+    driver: json
+    datamodel: http://www.sintef.no/calm/0.1/AbaqusConfiguration
+  functionType: application/vnd.dlite-generate
+  function: datanode_1_input
+- functionType: application/vnd.dlite-generate
+  configuration:
+    datamodel: http://www.sintef.no/calm/0.1/AluminiumMaterialCard
+    location: Section_materials_al.inp
+    driver: plugin_abaqus_material
+  function: datanode_7_input
+- functionType: application/vnd.dlite-convert
+  configuration:
+    function_name: singlefile_converter
+    module_name: execflow.data.singlefile_converter
+    inputs:
+    - label: datanode_7_output
+      datamodel: http://onto-ns.com/meta/2.0/core.singlefile
+    outputs:
+    - label: AluminiumMaterialCard_oteapi_instance
+      datamodel: http://onto-ns.com/meta/calm/0.1/AluminiumMaterialCard
+    kwargs:
+      parse_driver: json
+  function: datanode_7_output
+- downloadUrl: file://tests/testfiles/input_data/material_card_concrete.json
+  mediaType: application/vnd.dlite-parse
+  configuration:
+    driver: json
+    metadata: http://www.sintef.no/calm/0.1/ConcreteMaterialCard
+  type: ss3:ConcreteMaterialCard
+  dataresource: datanode_9_output
+- functionType: application/vnd.dlite-generate
+  configuration:
+    datamodel: http://www.sintef.no/calm/0.1/ConcreteMaterialCard
+    driver: plugin_abaqus_material
+    location: Section_materials_concrete.inp
+  function: datanode_9_input
+- function: datanode2cuds
+  functionType: aiidacuds/datanode2cuds
+  configuration:
+    names: to_cuds
+- function: datanode_9_input_to_aiida_datanode
+  functionType: aiidacuds/file2collection
+  configuration:
+    path: Section_materials_concrete.inp
+    label: datanode_9_input
+- function: datanode_7_input_to_aiida_datanode
+  functionType: aiidacuds/file2collection
+  configuration:
+    path: Section_materials_al.inp
+    label: datanode_7_input
+- function: datanode_1_input_to_aiida_datanode
+  functionType: aiidacuds/file2collection
+  configuration:
+    path: abaqusconf.json
+    label: datanode_1_input
+- function: cuds2datanode
+  functionType: aiidacuds/cuds2datanode
+  configuration:
+    names: from_cuds
+pipelines:
+  pipe: datanode2cuds | datanode_1_output | datanode_7_output | datanode_9_output
+    | datanode_1_input | datanode_7_input | datanode_9_input | datanode_9_input_to_aiida_datanode
+    | datanode_7_input_to_aiida_datanode | datanode_1_input_to_aiida_datanode | cuds2datanode

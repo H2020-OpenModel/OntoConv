@@ -9,7 +9,200 @@ from pathlib import Path
 
 import yaml
 
-from ontoconv.pipelines import generate_ontoflow_pipeline
+from ontoconv.pipelines import (
+    generate_ontoflow_pipeline,
+    load_simulation_resource,
+)
+
+
+class Node:
+    """
+    A Node in the AiiDA workflow.
+    """
+
+    def __init__(self, data, nodes):
+        self.inputs = []
+        self.outputs = []
+        self.depth = data["depth"]
+        self.iri = data["iri"]
+        self.resource_type = {
+            "output": "dataset" if "children" not in data else "",
+            "input": "",
+        }
+
+        if not self.resource_type["output"] == "dataset":
+            for n in data["children"]:
+                node = Node(n, nodes)
+                if n["predicate"] == "hasOutput":
+                    node.outputs.append(self)
+                    self.resource_type["output"] = node.iri
+                else:
+                    self.inputs.append(
+                        node
+                    )  # individual is singular input I guess
+                    if len(node.resource_type["input"]) == 0:
+                        node.resource_type["input"] = self.iri
+        self.id = len(nodes)
+        nodes.append(self)
+
+    def __str__(self):
+        s = (
+            f"Node: {self.id}:\niri:           {self.iri}"
+            f"\nresource_type: {self.resource_type}"
+        )
+        if len(self.inputs) != 0:
+            s += "\ninputs: "
+            for i in self.inputs:
+                s += f"\n{i.id}: {i.iri}"
+        if len(self.outputs) != 0:
+            s += "\noutputs: "
+            for i in self.outputs:
+                s += f"\n{i.id}: {i.iri}"
+        return s
+
+    def var_name(self, dtype):
+        """Return a name for a datanode."""
+        return f"datanode_{self.id}_{dtype}"
+
+    def step_name(self):
+        """Return a name for a step."""
+        return f"step_{self.id}"
+
+    def is_dataset(self):
+        """Check whether the Node is a dataset."""
+        return (
+            len(self.inputs) == 1
+            and self.inputs[0].resource_type["output"] == "dataset"
+        )
+
+    def is_step(self):
+        """Check if the Node is a step."""
+        return len(self.outputs) != 0
+
+    def is_ctx_node(self):
+        """Check if the Node is in the context."""
+        return (
+            self.resource_type["output"] != ""
+            and len(self.inputs) == 0
+            and len(self.outputs) == 0
+        )
+
+    def suffix(self):
+        """
+        Return the suffix.
+        """
+        return (
+            self.iri.split("#", 1)[-1]
+            if "#" in self.iri
+            else self.iri.rsplit("/", 1)[-1]
+        )
+
+    def kb_suffix(self):
+        """
+        The suffix of the knowledge base.
+        """
+        return self.iri.rsplit("/", 1)[-1].replace("#", ":")
+
+    def filename(self, resource):
+        """Return the filename."""
+        return resource["input"][self.kb_suffix()][-1]["function"][
+            "configuration"
+        ]["location"]
+
+    def input_postprocess(self):
+        """Get input for postpocessing"""
+        return (
+            f"{{{{ ctx.current.outputs.results['{self.var_name('input')}']"
+            f"|to_ctx('{self.var_name('input')}') }}}}"
+        )
+
+    def output_postprocess_execwrapper(self, filename):
+        """Get postprocessing step after execwrapper."""
+        f = filename.replace(".", "_")
+        return (
+            f"{{{{ ctx.current.outputs['{f}']|"
+            f"to_ctx('{self.var_name('output')}') }}}}"
+        )
+
+    def pipeline_step(self, pipeline_file, is_last=False):
+        """Create a pipeline step."""
+
+        inputs = {
+            "pipeline": {"$ref": f"file:__DIR__/{pipeline_file}"},
+            "run_pipeline": "pipe",
+        }
+
+        if not is_last:
+            inputs["from_cuds"] = [ni.var_name("input") for ni in self.inputs]
+            to_cuds = [
+                ni.var_name("output") for ni in self.inputs if ni.is_ctx_node()
+            ]
+        else:
+            to_cuds = [
+                ni.var_name("output")
+                for ni in self.outputs
+                if ni.is_ctx_node()
+            ]
+
+        if len(to_cuds) != 0:
+            inputs["to_cuds"] = to_cuds
+            for output in to_cuds:
+                inputs[output] = f"{{{{ ctx.{output} }}}}"
+        ret = {"workflow": "execflow.oteapipipeline", "inputs": inputs}
+
+        if not is_last:
+            ret["postprocess"] = [ni.input_postprocess() for ni in self.inputs]
+
+        return ret
+
+    def calculation_step(self, resource):
+        """Create a calculation step."""
+        # This is only for execwrapper at the moment
+        files = {}
+
+        for inp in self.inputs:
+            varname = inp.var_name("input")
+            files[f"in_file_{len(files)}"] = {
+                "filename": inp.filename(resource),
+                "node": f"{{{{ ctx.{varname} }}}}",
+            }
+
+        if "files" in resource:
+            for static_file in resource["files"]:
+                files[f"in_file_{len(files)}"] = {
+                    "filename": static_file["target_file"],
+                    "template": static_file["source_uri"],
+                }
+        full_command = resource["command"].replace("\\", "").split()
+        outfiles = output_filenames(resource)
+
+        return {
+            "workflow": resource["aiida_plugin"],
+            "inputs": {
+                "command": full_command.pop(0),
+                "arguments": full_command,
+                "files": files,
+                "outputs": outfiles,
+            },
+            "postprocess": [
+                on.output_postprocess_execwrapper(f)
+                for (f, on) in zip(outfiles, self.outputs)
+            ],
+        }
+
+
+def output_filenames(resource):
+    """Get outpit filenames."""
+    return [
+        f"{resource['output'][o][0]['dataresource']['downloadUrl']}"
+        for o in resource["output"]
+    ]
+
+
+def save_pipeline(name, pipeline, outdir):
+    """Save the pipeline to file."""
+    with open(Path(outdir) / name, "w", encoding="utf8") as f:
+        yaml.safe_dump(pipeline, f, sort_keys=False)
 
 
 def parse_ontoflow(workflow_data, kb, outdir="."):
@@ -26,159 +219,35 @@ def parse_ontoflow(workflow_data, kb, outdir="."):
         Pipeline and workchain files are saved as yaml.
 
     """
-    outdir = Path(outdir)
-    # Fetch the pipeline specifications
-    pipelines = get_all_pipelines_spec(data=workflow_data)
-    i = 1
+    nodes = []
+    print("a", nodes)
+    # Update nodes
+    Node(workflow_data, nodes)
 
-    # Generate each pipeline separately and save it
-    for pl in pipelines:
-        pipeline = generate_ontoflow_pipeline(
-            kb,
-            resources=pl,
-        )
+    chain = {"steps": []}
 
-        with open(
-            outdir / f"generated_pipeline_{i}.yaml", "w", encoding="utf8"
-        ) as f:
-            yaml.safe_dump(pipeline, f, sort_keys=False)
-        i += 1
+    istep = 0
+    # first we set up all the individuals
+    last = None
+    for n in nodes:
+        if n.is_step():
+            pipeline = generate_ontoflow_pipeline(kb, n.inputs)
+            pipeline_file = f"pipeline_{istep}.yaml"
+            save_pipeline(pipeline_file, pipeline, outdir)
 
-    # Generate the workchain
+            chain["steps"].append(n.pipeline_step(pipeline_file))
 
-    # Make the correct connections between the workchain and the pipelines
-    # 1. make sure that the pipelie is placed in the correct order
-    #    in the workchains
-    # 2. make sure that the generated files are placed in the correct
-    #    place in the workchain
-    #    (i.e. the correct data is passed to the correct AiiDA datanode)
-    # 3. make sure that the correct labels are passed between
-    #    workchain and pipelines
+            resource = load_simulation_resource(kb, n.iri)
+            chain["steps"].append(n.calculation_step(resource))
+            last = n
+            istep += 1
 
+    if last is not None:
+        pipeline = generate_ontoflow_pipeline(kb, last.outputs, True)
+        pipeline_file = "pipeline_final.yaml"
+        save_pipeline(pipeline_file, pipeline, outdir)
 
-def get_pipeline_spec(data):
-    """
-    Get the information needed to create an oteapi pipeline for
-    the first step in a workflow specification created by ontoflow.
+        chain["steps"].append(last.pipeline_step(pipeline_file, True))
 
-    Arguments:
-    data: dict
-        The workflow specification as provided by ontoflow
-
-    return: dict
-        The oteapi pipeline as a dictionary, in which sinks and sources
-        are provided as lists of dictionaries.
-        Each sink and source is described
-        with the keys 'iri' and 'resourcetype'.
-        An example of the output is:
-
-        ```python
-        {'sinks': [
-           {'iri': 'ss3:AbaqusConfiguration',
-            'resourcetype': 'ss3:AbaqusSimulation'},
-           {'iri': 'ss3:AluminiumMaterialCard',
-            'resourcetype': 'ss3:AbaqusSimulation'},
-           {'iri': 'ss3:ConcreteMaterialCard',
-            'resourcetype': 'ss3:AbaqusSimulation'}],
-         'sources': [
-           {'iri': 'ss3kb:abaqus_config1', 'resourcetype': 'dataset'},
-           {'iri': 'ss3:AluminiumMaterialCard',
-            'resourcetype': 'ss3:MaterialCardGenerator'},
-           {'iri': 'ss3kb:abaqus_materialcard_concrete1',
-            'resourcetype': 'dataset'}]}
-        ```
-    """
-    pipeline = {"sinks": [], "sources": []}
-    if (
-        len(data["children"]) == 1
-        and data["children"][0]["predicate"] == "hasOutput"
-    ):
-        pipeline["sources"] = get_partial_pipeline_in_spec(data)
-    else:
-        for child in data["children"]:  #
-            if child["predicate"] == "individual":
-                resourcetype = "dataset"
-            else:
-                resourcetype = data["iri"]
-            pipeline["sinks"].append(
-                {
-                    "iri": child["iri"],  # "predicate": child["predicate"],
-                    "resourcetype": resourcetype,
-                }
-            )
-            input_partial_pipeline = get_partial_pipeline_in_spec(child)
-            pipeline["sources"].extend(input_partial_pipeline)
-    return pipeline
-
-
-def get_partial_pipeline_in_spec(data):
-    """
-    Get the partial pipeline specification as
-    dictionary for the sources in the pipeline.
-    """
-    partial_pipeline = []
-    for child in data["children"]:
-        if child["predicate"] == "individual":
-            iri = child["iri"]
-            resourcetype = "dataset"
-        else:
-            iri = data["iri"]
-            resourcetype = child["iri"]
-
-        partial_pipeline.append(
-            {
-                "iri": iri,
-                "resourcetype": resourcetype,
-            }
-        )
-    return partial_pipeline
-
-
-def get_all_pipelines_spec(data, pipelines=None):
-    """
-    Get the information needed to create all oteapi pipelines
-    relevant for a workflow specification created by ontoflow.
-    Each model in the workflow is connected with an oteapi pipeline.
-
-    Arguments:
-    data: dict
-        The data as provided by ontoflow
-    pipelines: list
-        A list of dictionaries, each representing an oteapi pipeline.
-        Eeach dictionary has the keys 'sinks' and 'sources', which are
-        lists of dictionaries with the keys 'iri' and 'resourcetype'.
-
-    Each pipeline is in the format:
-    ```python
-        {'sinks': [
-           {'iri': 'ss3:AbaqusConfiguration',
-            'resourcetype': 'ss3:AbaqusSimulation'},
-           {'iri': 'ss3:AluminiumMaterialCard',
-            'resourcetype': 'ss3:AbaqusSimulation'},
-           {'iri': 'ss3:ConcreteMaterialCard',
-            'resourcetype': 'ss3:AbaqusSimulation'}],
-         'sources': [
-           {'iri': 'ss3kb:abaqus_config1', 'resourcetype': 'dataset'},
-           {'iri': 'ss3:AluminiumMaterialCard',
-            'resourcetype': 'ss3:MaterialCardGenerator'},
-           {'iri': 'ss3kb:abaqus_materialcard_concrete1',
-            'resourcetype': 'dataset'}]}
-    """
-    if not pipelines:
-        pipelines = []
-    p = get_pipeline_spec(data)
-    pipelines.append(p)
-    for v in p["sources"]:  # pylint: disable=too-many-nested-blocks
-        if v["resourcetype"] != "dataset":
-            children = data["children"]
-            for child in children:
-                remaining_data = None
-                if child["iri"] == v["resourcetype"]:
-                    remaining_data = child
-                else:
-                    for grandchild in child["children"]:
-                        if grandchild["iri"] == v["resourcetype"]:
-                            remaining_data = grandchild
-                if remaining_data:
-                    get_all_pipelines_spec(remaining_data, pipelines)
-    return pipelines
+    with open(Path(outdir) / "workchain.yaml", "w", encoding="utf8") as f:
+        yaml.safe_dump(chain, f, sort_keys=False)

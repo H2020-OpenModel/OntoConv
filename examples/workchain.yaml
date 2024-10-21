@@ -1,0 +1,76 @@
+steps:
+- workflow: execflow.oteapipipeline
+  inputs:
+    pipeline: pipeline_0.yaml
+    run_pipeline: pipe
+    from_cuds:
+    - datanode_3_input
+    - datanode_5_input
+  postprocess:
+  - '{{ ctx.current_outputs.results[''datanode_3_input'']|to_ctx(''datanode_3_input'')
+    }}'
+  - '{{ ctx.current_outputs.results[''datanode_5_input'']|to_ctx(''datanode_5_input'')
+    }}'
+- workflow: execflow.exec_wrapper
+  inputs:
+    command: \ python -m ss3_wrappers.material_card_generator \ --infile=yieldstress-input.txt
+      \ --template-file=tabulated_elastoplastic.json \ generated_material_card.card
+    files:
+      in_file_0:
+        filename: tabulated_elastoplastic.json
+        node: '{{ ctx.datanode_3_input }}'
+      in_file_1:
+        filename: yieldstress-input.txt
+        node: '{{ ctx.datanode_5_input }}'
+    outputs:
+    - file_0: aluminium_material_card.json
+  postprocess:
+  - '{{ ctx.current_outputs.results[''file_0'']|to_ctx(''datanode_7_output'') }}'
+- workflow: execflow.oteapipipeline
+  inputs:
+    pipeline: pipeline_1.yaml
+    run_pipeline: pipe
+    from_cuds:
+    - datanode_1_input
+    - datanode_7_input
+    - datanode_9_input
+    to_cuds:
+    - datanode_7_output
+    datanode_7_output: '{{ ctx.datanode_7_output }}'
+  postprocess:
+  - '{{ ctx.current_outputs.results[''datanode_1_input'']|to_ctx(''datanode_1_input'')
+    }}'
+  - '{{ ctx.current_outputs.results[''datanode_7_input'']|to_ctx(''datanode_7_input'')
+    }}'
+  - '{{ ctx.current_outputs.results[''datanode_9_input'']|to_ctx(''datanode_9_input'')
+    }}'
+- workflow: execflow.exec_wrapper
+  inputs:
+    command: run_abaqus.sh
+    files:
+      in_file_0:
+        filename: abaqusconf.json
+        node: '{{ ctx.datanode_1_input }}'
+      in_file_1:
+        filename: Section_materials_al.inp
+        node: '{{ ctx.datanode_7_input }}'
+      in_file_2:
+        filename: Section_materials_concrete.inp
+        node: '{{ ctx.datanode_9_input }}'
+      in_file_3:
+        filename: run_abaqus.sh
+        template: file://SS3_wrapper/cli/run_abaqus.sh
+      in_file_4:
+        filename: expand_abaqusconf.py
+        template: file://SS3_wrapper/cli/expand_abaqusconf.py
+    outputs:
+    - file_0: abaqus_deformation_history.txt
+  postprocess:
+  - '{{ ctx.current_outputs.results[''file_0'']|to_ctx(''datanode_11_output'') }}'
+- workflow: execflow.oteapipipeline
+  inputs:
+    pipeline: pipeline_final.yaml
+    run_pipeline: pipe
+    to_cuds:
+    - datanode_11_output
+    datanode_11_output: '{{ ctx.datanode_11_output }}'
