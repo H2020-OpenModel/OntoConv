@@ -205,7 +205,9 @@ def save_pipeline(name, pipeline, outdir):
         yaml.safe_dump(pipeline, f, sort_keys=False)
 
 
-def parse_ontoflow(workflow_data, kb, outdir="."):
+def parse_ontoflow(
+    workflow_data, kb, outdir=".", target_ts: "Optional[Triplestore]" = None
+):
     """
     Function to parse ontoflow and create declarative workchain
     and corresponding pipelines.
@@ -217,10 +219,13 @@ def parse_ontoflow(workflow_data, kb, outdir="."):
     outdir: str
         The directory to save the output files.
         Pipeline and workchain files are saved as yaml.
+    target_ts: Tripper triplestore in which generated output of
+        the pipeline is to be documented. Defaults to the same
+        triplestore in which sources and models are documented.
+
 
     """
     nodes = []
-    print("a", nodes)
     # Update nodes
     Node(workflow_data, nodes)
 
@@ -243,8 +248,11 @@ def parse_ontoflow(workflow_data, kb, outdir="."):
             istep += 1
 
     if last is not None:
-        pipeline = generate_ontoflow_pipeline(kb, last.outputs, True)
+        pipeline = generate_ontoflow_pipeline(
+            kb, last.outputs, True, target_ts=target_ts
+        )
         pipeline_file = "pipeline_final.yaml"
+
         save_pipeline(pipeline_file, pipeline, outdir)
 
         chain["steps"].append(last.pipeline_step(pipeline_file, True))

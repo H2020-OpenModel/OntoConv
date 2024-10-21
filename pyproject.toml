@@ -18,21 +18,20 @@ keywords = ["OpenModel", "OntoFlow", "ExecFlow", "workflow"]
 requires-python = "~=3.8"
 dynamic = ["version"]
 dependencies = [
-    #"OntoFlow @ git+https://github.com/H2020-OpenModel/OntoFlow",
-    #"ExecFlow @ git+https://github.com/H2020-OpenModel/ExecFlow",
-    #"tripper >=0.2.15,<1",
-    # NB!minimum version tripper should be 0.2.17
-    "tripper @ git+https://github.com/EMMC-ASBL/tripper.git@master",
+    "tripper >= 0.3.4, < 0.3.5",
     "rdflib >=6.1, < 7.0.1",
     "pyyaml ~=6.0",
-    #"oteapi-core >=0.6.1,<0.7",
+    # It does not depend on oteapi-dlite for running,
+    # but the output cannot be run without at least version
+    # 0.3.0 of oteapi-dlite
+    "oteapi-dlite >= 0.3.0, <0.3.3",
     "otelib >=0.4.1,<0.5",
 ]
 
 [project.optional-dependencies]
 docs = []
 pre-commit = [
-    "pre-commit ~=2.21",
+    "pre-commit ~=4.0.1",
     "pylint ~=3.2",
 ]
 testing = [
@@ -41,7 +40,7 @@ testing = [
     "deepdiff ~=7.0",
 ]
 dev = [
-    "pre-commit ~=2.21",
+    "pre-commit ~=4.0.1",
     "pylint ~=3.2",
     "pytest ~=7.4",
     "pytest-cov ~=4.1",
