@@ -136,15 +136,10 @@ def save_simulation_resource(ts: Triplestore, iri: str, resource: dict):
     save_container(ts, resource, iri, recognised_keys=RECOGNISED_KEYS)
 
     # Ensure that all input and output are datasets
-    # print(resource["input"].keys(), type(resource["input"]))
-    # print(resource)
     for input in resource.get("input", {}):
-        # print('INPUT', input, repr(input))
-        # for dataset in input:
         ts.add((input, RDF.type, OTEIO.DataSink))
 
     for output in resource.get("output", {}):
-        # for dataset in output:
         ts.add((output, RDF.type, OTEIO.DataSource))
 
 
@@ -219,10 +214,7 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
     i = 0
 
     def add_resource(resource, dtype):
-        # print('resource', repr(resource))
-        # print('dtype', repr(dtype))
         for strategy in resource:
-            # print('strategy', repr(strategy))
             for stype, conf in strategy.items():
                 name = n.var_name(dtype)
                 conf[stype] = name
@@ -231,14 +223,9 @@ def generate_ontoflow_pipeline(  # pylint: disable=too-many-branches,too-many-lo
                 names[dtype].append(name)
                 strategies.append(conf)
 
-    # print('nodes')
-    # print(repr(nodes))
     for n in nodes:
         iri = n.iri
         for n1 in n.inputs:
-            # print('---')
-            # print('n1', n1)
-            # print('---')
             if n1.resource_type["output"] == "dataset":
                 add_resource(
                     load_container(

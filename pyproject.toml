@@ -32,7 +32,7 @@ dependencies = [
 [project.optional-dependencies]
 docs = []
 pre-commit = [
-    "pre-commit ~=2.21",
+    "pre-commit ~=4.0.1",
     "pylint ~=3.2",
 ]
 testing = [
@@ -41,7 +41,7 @@ testing = [
     "deepdiff ~=7.0",
 ]
 dev = [
-    "pre-commit ~=2.21",
+    "pre-commit ~=4.0.1",
     "pylint ~=3.2",
     "pytest ~=7.4",
     "pytest-cov ~=4.1",

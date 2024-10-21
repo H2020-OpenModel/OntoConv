@@ -226,7 +226,6 @@ def parse_ontoflow(
 
     """
     nodes = []
-    print("a", nodes)
     # Update nodes
     Node(workflow_data, nodes)
 
