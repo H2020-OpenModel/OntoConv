@@ -21,6 +21,10 @@ dependencies = [
     "tripper >= 0.3.4, < 0.3.5",
     "rdflib >=6.1, < 7.0.1",
     "pyyaml ~=6.0",
+    # It does not depend on oteapi-dlite for running,
+    # but the output cannot be run without at least version
+    # 0.3.0 of oteapi-dlite
+    "oteapi-dlite >= 0.3.0, <0.3.1",
     "otelib >=0.4.1,<0.5",
 ]
 
