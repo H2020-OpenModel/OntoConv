@@ -981,4 +981,3 @@ ss3kb:yieldstrength1 a ss3:YieldStrength,
 
 <z> a oteio:DataSink,
         oteio:DataSource .
-
